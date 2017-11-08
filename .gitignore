@@ -2,6 +2,11 @@
 *.arff
 *.model
 
+# Stanford models
+*.gz
+*.tagger
+
+
 # Built application files and Maven
 target/
 pom.xml.tag
