@@ -1,0 +1,101 @@
+Schemes must provide a centralized reporting function for risk analysis
+The electronic purse card issuer must reflect all changes in the value of a loaded card and the aggregate funds pool on their card databases and funds pool accounting systems (where separate)
+Unload transactions require the unload acquirer to provide consumers with the option of a receipt, as appropriate and subject to local regulations
+Successful authentication is a prerequisite for the processing of any on-line or offline CEPS transaction
+On-line authentication must take place between the card issuer and the CEP card for load, unload, and currency exchange transactions
+The card issuer and the CEP card share a secret key to generate and verify MACs
+Specification of keys and signatures used for CEPS on-line authentication is left to the issuer, however MACs passed over shared networks must be no more than 8 bytes long, binary format
+Off-line authentication must take place between a PSAM in the POS device and the CEP card for purchase and cancel last purchase transactions
+The card and the PSAM must use a public key algorithm for mutual authentication and session key exchange, as no permanent shared secret key may exist between the CEP card and the PSAM
+To load value into a slot of the CEP card securely, the load device establishes a connection between the issuer and the CEP card
+The card should use a unique diversified secret key, personalized into the card, to generate and authenticate transaction signatures
+If this is not a cash load, the funds issuer needs to verify that the funds are requested by the legitimate account owner, which is normally done by the presentation of an enciphered PIN
+The card issuer needs to ensure that the load acquirer is guaranteeing payment for the electronic value, and that the card is authentic
+The load acquirer needs to ensure that the issuer is the true owner of the card, and, in the case of an apparent failure of the load, the load acquirer needs the card presented to authenticate the failure
+The load device sends S1 in an authorization request to the issuer
+The load device also provides for verification of the identity of the cardholder (with either on-line or off-line PIN verification) and forwards verification data in the authorization request
+The issuer validates S1 to authenticate the card and the data to be used in the transaction
+The issuer sends S2 to the load acquirer in the authorization response message
+Unloads are permitted only to an account controlled by the card issuer and are performed only at a load device under the control of the card issuer
+The cardholder must have an account relationship with the card issuer, and funds removed from the card are credited to the cardholder account only after the card issuer authenticates the card
+The issuer needs only to authenticate the card, and the card needs only to authenticate the issuer and that the data is the same as used by the issuer
+The card generates S1, using data from the card and load device, and sends S1 to the card issuer to authenticate the card and the data that is to be used in the transaction
+The card issuer validates S1, calculates the amount of the transaction into the new currency, and determines whether to allow the exchange to complete
+The card issuer generates S2, which is sent to the card to allow the card to validate the card issuer's authenticity and to ensure that the data used by the card in the transaction is the same as the card issuer intended
+During a purchase transaction, the CEP card must ensure that it is dealing with an authentic POS device, and it must generate a signature to allow the card issuer to verify the integrity of the transaction
+The POS device must ensure that it is dealing with an authentic card, and guarantee integrity of transactions and batches to the merchant acquirer
+For multiple step transactions, the CEP card can, at the card issuer's option, reauthenticate the PSAM at each step (mutual authentication), or it can rely on the authentication that was performed during the first step (dual authentication)
+In the case of a reversal, the CEP card must re-authenticate the PSAM
+The card must ensure that the transaction is performed by the same POS device as was used for the purchase being canceled, and that the amount of the cancellation is the same as the amount of the purchase, or, in the case of an incremental purchase, the same as the amount of the last step
+During a Cancel Last Purchase transaction, the CEP card is authenticated by the PSAM in the POS device
+The PSAM authenticates that the purchase transaction being canceled was performed by the PSAM, and that the transaction being canceled is part of the active batch
+The card issuer and the merchant acquirer also authenticate the transaction when they receive it
+Transmissions between host systems should be protected by MACs based on unique keys that are shared by the nodes involved
+The transaction signatures ensure end to end integrity of transmitted data for load, unload, and currency exchange transactions
+These totals are used by the merchant acquirer to ensure the integrity of the batch
+The count and amount of the transactions in the batch must be protected by the S4 MAC,  This information is not part of the card issuer's verification process
+Scheme providers must assign unique identifying numbers to merchant acquirers who provide PSAMs
+These merchant acquirers must then assign unique identifiers to PSAMs
+As a result, each PSAM must have a unique ID composed of the scheme identifier, a merchant acquirer identifier, and the PSAM identifier
+Each PSAM must maintain a transaction count, The unique PSAM ID and the transaction count are used during a conversation with a CEP card. The transaction count must not be reset during the life of the PSAM
+Contain the CA public RSA key, the PSAM's private RSA key and optionally the certificates that the POS device uses to perform mutual authentication with the CEP card
+Perform the calculation required to generate a signature using the PSAM's private RSA key, to allow the CEP card to validate the PSAM
+Contain one or more MAC keys used by the merchant acquirer to ensure the integrity of the data received from the POS device
+Be the entity that maintains control over the flow of a transaction, ensuring that all security is enforced
+Perform the verification of signatures and certificates during a purchase and cancel last purchase transaction
+Ensure that CA public keys, aggregation parameters, blocking lists and issuer certificate revocation lists from the scheme providers are sent to the POS devices
+Share one or more MAC keys with connecting processors, create a MAC on each transmission sent to another processor, and verify the MAC on each transmission received from another processor
+The scheme provider must ensure that the entire process between merchants, merchant acquirers, card issuers, and processors is auditable and reconcilable
+If errors in the card issuer MAC are discovered by the card issuer during its processing of the transactions, a dispute mechanism, established by the scheme provider, may be used to have money refunded
+If a scheme provider establishes a central error repository, all transactions for the scheme with MAC errors must be sent to that central error repository whether or not they are submitted to the dispute process
+A purchase transaction may be reversed, prior to the removal of the CEP card from the POS device, by sending a purchase reversal command to the CEP card, The CEP card must authenticate the PSAM using certificates previously exchanged
+The amount to be reversed is the amount of the last step of the transaction. The reversal command sent to the CEP card contains a S2 MAC computed by the PSAM
+The PSAM in the POS device generates a merchant acquirer S5 MAC for the transaction, computes a new S4 MAC on the updated batch total count and amount, and logs the transaction
+The transaction and MACs are kept in a data store associated with the POS device until the merchant acquirer collects them. The logged data must include the total amount of the purchase, the purchase amount that was reversed, and an indication that the transaction was reversed
+The CEP card authenticates the PSAM using the certificates previously received and the S2, The CEP card increments the value of the purse and logs the transaction
+The CEP card verifies that the PSAM is the PSAM used in the original transaction, computes a S1 MAC using the same DES session key that was used for the purchase transaction being cancelled, and responds to the POS device with the S1 and the identification of the last transaction. If the purchase transaction to be canceled has been canceled or is not part of the active batch, the command is not allowed
+The PSAM either retrieves or re-derives the DES session key used for the purchase transaction being cancelled. The POS device authenticates the CEP card using this key and the S1 MAC
+The PSAM in the POS device generates a merchant acquirer S5 MAC for the transaction and a new S4 MAC for the batch total count and amount and logs the transaction. The amount of the canceled last purchase transaction is subtracted from the header amount. The transaction is kept in a data store associated with the POS device until the merchant acquirer collects it
+A credit command, which contains the S2 MAC computed by the PSAM using the session key, is sent to the CEP card
+The CEP card authenticates the terminal using the S2 MAC and the session key from the purchase transaction being cancelled. The CEP card increments the value of the purse and logs the transaction. The CEP card verifies that the cancellation amount is equal to the amount of the last step of the purchase transaction
+A transaction collection process must exist. Data being transmitted from the POS devices must be transmitted in a manner that ensures integrity of the data
+The PSAM must create a MAC on the updated aggregation record. Aggregation records by card issuer must be stored in the PSAM. They may also be stored in the POS device as well
+Each POS transaction completed at the POS device is given a S5 MAC by the PSAM, which is used by the merchant acquirer to validate that the transactions were made at a POS device with a valid PSAM. The batch total count and amount must be protected by the S4 MAC, which must also be validated by the merchant acquirer
+The merchant acquirer validates the PSAM's MACs prior to accepting the POS transactions for payment. In addition, selected data elements are validated to ensure correct processing by the POS device and its PSAM
+Each purchase transaction is signed by the CEP card with a S6 MAC, which is used by the card issuer to validate that the transaction was made with a legitimate, not counterfeit, CEP card. The card issuer validates the CEP card's MAC
+Payment decisions are based on signature validations, scheme provider rules, and merchant and merchant acquirer agreements
+Errors may be introduced by a malfunctioning PSAM or POS device software, by key management problems, or through the transmission process, as well as through fraudulent activities of another entity. When a batch or POS transaction fails validation, the merchant acquirer or card issuer must follow exception procedures that affect payment to the merchants and payment from the card issuer. The batch must be analyzed to determine clearable transactions out of a corrupted batch
+Purchase transactions that have an invalid MAC are forwarded to the scheme provider for analysis if the scheme provider has established a central error repository
+Pay on detail is the default payment arrangement for merchant acquirers to provide payment to their merchants. In this arrangement, the merchant acquirer relies on the POS transaction S5 MAC to determine acceptance. Merchants are paid only for valid POS transactions
+All load transactions are on-line transactions. Authorization of funds for load transactions must require a form of cardholder verification. The load device must support on-line encrypted PIN or off-line PIN verification
+Off-line PIN verification must include both encrypted and unencrypted PIN
+The card verification method indicator (CVMI) in the CEP card must specify support of online PIN verification and at least one method of off-line PIN verification (encrypted or unencrypted)
+Where it is necessary for a CEPS system component to distinguish between on-line and off-line cardholder PIN verification, a flag must be set in the transaction
+Since these transactions are on-line to the issuer, the issuer has the opportunity to lock the card or the application. These transactions are not available to a card that has already been locked
+The load acquirer must notify the card issuer of all suspect transactions
+For unload transactions, the load acquirer and card issuer must be the same financial institution. Load devices or load acquirers must be able to identify their own institution's CEP cards
+Only one version of the CA public key is required in the card. This requires that the PSAMs with which the CEP card exchanges cryptograms must be capable of generating and validating cryptograms using the relevant keys from all current cards
+Two-way, or mutual, authentication, where the card authenticates the terminal and the terminal authenticates the card for each transaction, must be performed for off-line transactions
+The electronic purse product must use dynamic data authentication at the following points: 1. Load 2. Unload 3. Currency Exchange 4. Purchase, Purchase Reversal 5. Incremental Purchase 6. Cancel Last Purchase 7. Personalization 8. On-line Updates to the Application
+For increased security and convenience, asymmetric cryptography must be used as the authentication security for off-line transactions
+The card must authenticate the terminal at the point of sale, ensuring that it is genuine and valid, and use a two-way authentication process
+The terminal must authenticate the card and the transaction at the point of sale, ensuring that they are genuine and valid
+The terminal must participate in a two-way authentication process with the card
+For cancel last purchase transactions, the terminal must validate the card and sign the cancellation
+The terminal must secure transactions by retaining the card's symmetric MACing key signature as part of the transaction
+The terminal must generate a symmetric MACing key signature and send it to the merchant acquirer
+Incremental purchase transactions must use two-way authentication for the initial session authentication, and at least one-way, with the terminal authenticating the card, for the remaining increments or some of the remaining increments
+Load and unload functions must be authenticated using end-to-end security between the card and the card issuer
+The issuer host must authenticate the card upon the load/unload request
+The card must authenticate the issuer host upon the response to the request
+A proof must be sent to the load acquirer that a load or unload occurred to avoid repudiation
+The management of keys must be accomplished in a secure, certified environment
+There may be multiple certification authorities that manage keys for the system, including the possibility of one overall highest level certification authority (perhaps on an international level), and domestic certification authorities for each country or region
+The system must support a fraud detection and reporting capability sufficient enough to aid in the detection of counterfeit and fraud
+Fault handling and exception processing capabilities must be robust enough to ensure transaction integrity and to facilitate the isolation of unrecoverable activity
+The system must protect the integrity of key transaction data including transaction identification, currency code and amount. If tampering is suspected, the system must cause the transaction to fail
+Funds issuers must accept funds authorization requests, regardless of the load currency type, as permitted
+Authorizations for load transactions require a form of cardholder authentication for funds requests
+The load device must support on-line PIN encryption or off-line PIN verification
+The load device which supports only off-line PIN verification must support both the off-line PIN encryption method and the off-line PIN plain text verification method as defined in EMV
+Unload transactions do not require cardholder authentication. (However, an acquirer's devices may be configured such that authentication is required for access.)
