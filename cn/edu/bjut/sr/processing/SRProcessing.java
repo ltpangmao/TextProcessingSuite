@@ -34,7 +34,7 @@ public class SRProcessing {
 	 * modify global variable
 	 * @param filePath
 	 */
-	private void importSentencesFromCSV(String filePath, boolean include_sen) {
+	private void importSentencesFromCSV(String filePath, boolean include_class, boolean include_sen) {
 		try {
 			File file = new File(filePath);
 			BufferedReader bf = new BufferedReader(new FileReader(file.getAbsolutePath()));
@@ -48,13 +48,16 @@ public class SRProcessing {
 				}
 				else {
 					FeaturedSentence fs = new FeaturedSentence(temp[0]);
-					// first add the category feature 
-					if (temp[1].equals("sec")) {
-						fs.features.add(new SRFeature(FeatureEnum.CATEGORY, FeatureEnum.FT_CATEGORY,"1"));
-					} else if (temp[1].equals(("nonsec"))) {
-						fs.features.add(new SRFeature(FeatureEnum.CATEGORY, FeatureEnum.FT_CATEGORY,"0"));
-					} else {
-						Log.error("Errors of imported classification!\n" + temp[1] + " " + temp[0]);
+					// include class attribute if required
+					if (include_class) {
+						// first add the category feature
+						if (temp[1].equals("sec")) {
+							fs.features.add(new SRFeature(FeatureEnum.CATEGORY, FeatureEnum.FT_CATEGORY, "1"));
+						} else if (temp[1].equals(("nonsec"))) {
+							fs.features.add(new SRFeature(FeatureEnum.CATEGORY, FeatureEnum.FT_CATEGORY, "0"));
+						} else {
+							Log.error("Errors of imported classification!\n" + temp[1] + " " + temp[0]);
+						}
 					}
 					if(include_sen) {
 						// add the sentence itself as a feature, if required
@@ -280,16 +283,17 @@ public class SRProcessing {
 	/**
 	 * This is a customized function for generating various dataset, in which parameters represent conditions
 	 * @param ori_data
+	 * @param include_class
 	 * @param include_sen
 	 * @param single_keyword
 	 * @param single_rule
 	 */
-	public String processDataAndGenerateArff(String ori_data, boolean include_sen, int keyword, int rule, int dep, WekaAnalysisDataset wa) {
+	public String processDataAndGenerateArff(String ori_data, boolean include_class, boolean include_sen,  int keyword, int rule, int dep, WekaAnalysisDataset wa) {
 		String output_file_path = "output data/"; // this will be incrementally modified during the procedure
 
 		// import files
 		for (Character c : ori_data.toCharArray()) {
-			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], include_sen);
+			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], include_class, include_sen);
 			// generate file name
 			output_file_path += c + "_";
 		}
@@ -343,7 +347,7 @@ public class SRProcessing {
 			Log.error("unexpected dependency parameter: " + dep);
 		}
 
-		wa.generateWekaDataFromSRP(sentences, include_sen, output_file_path);
+		wa.generateWekaDataFromSRP(sentences, include_class, include_sen, output_file_path);
 
 		return output_file_path;
 	}
@@ -375,9 +379,6 @@ public class SRProcessing {
 	
 	
 
-
-		
-	
 	
 	
 	public static void main(String[] args) throws Exception{
@@ -385,8 +386,9 @@ public class SRProcessing {
 		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 
 		// load dataset
-		String data_file_path = srp1.processDataAndGenerateArff("0", false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_MULTI, wa1);
-
+		String data_file_path = srp1.processDataAndGenerateArff("1", false, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+		
+		wa1.customized_clustering();
 	}
 	
 

@@ -31,7 +31,7 @@ public class Experiments {
 			WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 
 			// load dataset
-			String data_file_path = srp1.processDataAndGenerateArff(experiment, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+			String data_file_path = srp1.processDataAndGenerateArff(experiment, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
 			Log.info("Dataset "+experiment);
 			// train classifier
 			Classifier temp;
@@ -101,13 +101,13 @@ public class Experiments {
 		SRProcessing srp1 = new SRProcessing();
 		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 		// load the training dataset to wa1
-		srp1.processDataAndGenerateArff("12", false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+		srp1.processDataAndGenerateArff("12", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
 		
 		// load the test dataset to wa2
 		SRProcessing srp2 = new SRProcessing();
 		WekaAnalysisDataset wa2 = new WekaAnalysisDataset();
 		// load another dataset
-		srp2.processDataAndGenerateArff("0", false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
+		srp2.processDataAndGenerateArff("0", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
 		
 //		wa1.classifyUseTrainTestData(wa2, "J48", null);
 		Classifier temp = wa1.trainClassifier("J48");
@@ -123,13 +123,13 @@ public class Experiments {
 		SRProcessing srp1 = new SRProcessing();
 		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 		// load dataset
-		srp1.processDataAndGenerateArff("2", true, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+		srp1.processDataAndGenerateArff("2", true, true, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
 		
 		// try the previous model on another dataset
 		SRProcessing srp2 = new SRProcessing();
 		WekaAnalysisDataset wa2 = new WekaAnalysisDataset();
 		// load another dataset
-		srp2.processDataAndGenerateArff("0", false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
+		srp2.processDataAndGenerateArff("0", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
 		
 		Classifier temp = wa1.trainClassifier("J48");
 		wa1.evaluateWithTestData(temp, wa2, wa1.word_features);
@@ -148,7 +148,7 @@ public class Experiments {
 		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 
 		// load dataset
-		String data_file_path = srp1.processDataAndGenerateArff("0", false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+		String data_file_path = srp1.processDataAndGenerateArff("0", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
 		// classify and evaluate
 		Classifier temp;
 		temp = wa1.trainClassifier("J48");
@@ -160,7 +160,7 @@ public class Experiments {
 		// new analyzer
 		WekaAnalysisDataset wa2 = new WekaAnalysisDataset();
 		SRProcessing srp2 = new SRProcessing();
-		srp2.processDataAndGenerateArff("1", false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO,wa2);
+		srp2.processDataAndGenerateArff("1", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO,wa2);
 
 		// load classifier
 		Classifier cf = (Classifier) weka.core.SerializationHelper.read(model_file_path);
