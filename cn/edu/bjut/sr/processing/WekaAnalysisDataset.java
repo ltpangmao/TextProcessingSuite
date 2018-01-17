@@ -85,12 +85,19 @@ public class WekaAnalysisDataset {
 				labels.add(negative);
 				temp_att = new Attribute(srf.getFeature_name(), labels);
 			} else if (srf.getFeature_type() == FeatureEnum.FT_KEYWORD
-					|| srf.getFeature_type() == FeatureEnum.FT_RULE) {
+					|| srf.getFeature_type() == FeatureEnum.FT_RULE
+					|| srf.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE) {
 				ArrayList<String> labels = new ArrayList<String>();
 				labels.add(positive);
 				labels.add(negative);
 				temp_att = new Attribute(srf.getFeature_name(), labels);
-			} else {
+			} else if (srf.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
+				ArrayList<String> labels = new ArrayList<String>();
+				labels.add(positive);
+				labels.add(negative);
+				temp_att = new Attribute(srf.getFeature_name(), labels);
+			}
+			else {
 				Log.error("wrong feature types");
 			}
 			attributes.add(temp_att);
@@ -118,7 +125,8 @@ public class WekaAnalysisDataset {
 					// nominal
 					values[i] = dataset.attribute(i).indexOfValue(srf_temp.getFeature_value().toString());
 				} else if (srf_temp.getFeature_type() == FeatureEnum.FT_KEYWORD
-						|| srf_temp.getFeature_type() == FeatureEnum.FT_RULE) {
+						|| srf_temp.getFeature_type() == FeatureEnum.FT_RULE
+						|| srf_temp.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE) {
 					// nominal
 					values[i] = dataset.attribute(i).indexOfValue(srf_temp.getFeature_value().toString());
 				} else {
@@ -279,7 +287,11 @@ public class WekaAnalysisDataset {
 		}
 	}
 
-	public void customized_clustering() throws Exception {
+	/**
+	 * Customized clustering algorithm
+	 * @throws Exception
+	 */
+	private void customized_clustering() throws Exception {
 
 		weka.clusterers.HierarchicalClusterer h = new weka.clusterers.HierarchicalClusterer();
 
@@ -289,7 +301,7 @@ public class WekaAnalysisDataset {
 		h.setLinkType(s);
 		h.buildClusterer(dataset);
 
-		BufferedWriter writer = new BufferedWriter(new FileWriter("temp.arff"));
+		//BufferedWriter writer = new BufferedWriter(new FileWriter("temp.arff"));
 
 		ClusterEvaluation eval = new ClusterEvaluation();
 		eval.setClusterer(h);

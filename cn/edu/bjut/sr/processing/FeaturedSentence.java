@@ -19,6 +19,10 @@ public class FeaturedSentence {
 //	SemanticGraph dep_tree; 
 	LinkedList<SemanticGraph> dep_trees; // in case there are requirements that contains two sentences
 	LinkedList<SRFeature> features;
+
+	
+	// Syntax sugar, which is used for analyzing syntax clustering 
+	LinkedList<String> syntax_slices;
 	
 
 	public FeaturedSentence() {
@@ -28,6 +32,8 @@ public class FeaturedSentence {
 		this.stemmed_parse = null;
 		this.dep_trees = null;
 		this.features = new LinkedList<SRFeature> ();
+		//
+		this.syntax_slices = new LinkedList<String>();
 	}
 	
 	public FeaturedSentence(String sentence) {
@@ -37,5 +43,7 @@ public class FeaturedSentence {
 		this.stemmed_parse = null;
 		this.dep_trees = null;
 		this.features = new LinkedList<SRFeature> ();
+		//
+		this.syntax_slices = new LinkedList<String>();
 	}
 }

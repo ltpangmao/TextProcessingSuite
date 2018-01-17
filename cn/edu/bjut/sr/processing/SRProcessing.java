@@ -3,8 +3,12 @@ package cn.edu.bjut.sr.processing;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
+import java.util.Set;
 
 import cn.edu.bjut.text.processing.EnglishProcessing;
 import cn.edu.bjut.text.utility.IEnum;
@@ -12,6 +16,7 @@ import cn.edu.bjut.text.utility.Log;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.trees.Tree;
 import weka.classifiers.Classifier;
 
 
@@ -280,6 +285,64 @@ public class SRProcessing {
 		}
 	}
 	
+	
+	private Set<String> identifySyntaxSlices(){
+		//LinkedList<String> syntax_slice_set = new LinkedList();
+		Set<String> syntax_slice_set = new HashSet<String>();
+		// syntactic analysis
+		LexicalizedParser lp = null;
+		lp = LexicalizedParser.loadModel("parser/models/lexparser/englishPCFG.ser.gz");
+		
+		for (FeaturedSentence fs: sentences){
+			// parse sentences and generated a stemmed version, only for candidate match
+			String[] words = fs.ori_sentence.split(" ");
+			fs.parse = EnglishProcessing.parseSentence(lp, words, IEnum.ENGLISH, false);
+			// obtain all leaves, and go up to get all slices
+			ArrayList<Tree> leaves = (ArrayList<Tree>) fs.parse.getLeaves();
+			for(Tree leaf : leaves) {
+				// obtain the POSTag nodes, i.e., the parents of leaves   
+				Tree parent = leaf.ancestor(1, fs.parse);
+				Tree temp;
+				// traverse up to the root node, and generate all slices
+				while (parent!=null) {
+					temp = parent.ancestor(1, fs.parse);
+					if(temp!=null) {
+						String slice = parent.value()+"->"+temp.value();
+						// attach syntax slices to the sentence 
+						fs.syntax_slices.add(slice);
+						// record syntax slices, which will be used later 
+						syntax_slice_set.add(slice);
+//						System.out.println(slice);
+					}
+					parent = temp;
+				}				
+			}
+			//fs.stemmed_parse = EnglishProcessing.parseTreeStemmingNew(fs.parse);
+		}
+		return syntax_slice_set;
+	}
+	
+	/**
+	 * generate slice features according to identified syntax slices
+	 * @param syntax_slice_set
+	 */
+	private void generateSyntaxSliceFeature(Set<String> syntax_slice_set) {
+		// TODO Auto-generated method stub
+		for(FeaturedSentence fs: sentences) {
+			
+			for (String slice : syntax_slice_set) {
+				if (fs.syntax_slices.contains(slice)){// if keyword is found,
+					// add feature value
+					fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE, "1"));
+				} else {
+					fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE, "0"));
+				}
+			}
+			
+		}
+	}
+	
+	
 	/**
 	 * This is a customized function for generating various dataset, in which parameters represent conditions
 	 * @param ori_data
@@ -351,8 +414,39 @@ public class SRProcessing {
 
 		return output_file_path;
 	}
+	
+	/**
+	 * import data file and produce a set of syntax slices for clustering 
+	 * @param ori_data
+	 * @param wa
+	 * @return
+	 */
+	public String processDataForSyntaxCluster(String ori_data, WekaAnalysisDataset wa) {
+		String output_file_path = "output data/"; // this will be incrementally modified during the procedure
+
+		// import files
+		for (Character c : ori_data.toCharArray()) {
+			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], false, false);
+			// generate file name
+			output_file_path += c + "_";
+		}
+		
+		// identify syntax slices
+		Set<String> syntax_slice_set = identifySyntaxSlices();
+		// generate featured sentences based on syntax slices
+		generateSyntaxSliceFeature(syntax_slice_set);
+		// output file name
+		output_file_path += "syn_slice.arff";
+		
+		wa.generateWekaDataFromSRP(sentences, false, false, output_file_path);
+
+		return output_file_path;
+	}
 
 	
+	
+
+
 	/**
 	 * print current information of the featured dataset
 	 */
@@ -386,9 +480,18 @@ public class SRProcessing {
 		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 
 		// load dataset
-		String data_file_path = srp1.processDataAndGenerateArff("1", false, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+//		String data_file_path = srp1.processDataAndGenerateArff("1", false, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+//		wa1.clustering();
 		
-		wa1.customized_clustering();
+		String data_file_path = srp1.processDataForSyntaxCluster("1", wa1);
+		
+		wa1.clustering();
+		
+		// read data from file
+		// use different cluster algorithm
+		// print the results of algorithms
+		
+		
 	}
 	
 
