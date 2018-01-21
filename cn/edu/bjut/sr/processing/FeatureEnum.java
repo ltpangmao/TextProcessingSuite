@@ -47,6 +47,9 @@ public class FeatureEnum {
 	public static final int FT_SYNTAX_SLICE= 5;
 	public static final int FT_SYNTAX_SLICE_NUMERIC= 6;
 	
+	public static final int FT_SEMANTIC_DEPENDENCY= 7;
+	public static final int FT_SEMANTIC_DEPENDENCY_NUMERIC= 8;
+	
 //	//Types of syntactic analysis
 //	public static final int SIMPLE_ANALYSIS= 0;
 //	public static final int COMPLEX_ANALYSIS= 1;

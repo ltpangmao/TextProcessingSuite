@@ -23,6 +23,7 @@ public class FeaturedSentence {
 	
 	// Syntax sugar, which is used for analyzing syntax clustering 
 	LinkedList<String> syntax_slices;
+	LinkedList<String> dependencies;
 	
 
 	public FeaturedSentence() {
@@ -34,6 +35,7 @@ public class FeaturedSentence {
 		this.features = new LinkedList<SRFeature> ();
 		//
 		this.syntax_slices = new LinkedList<String>();
+		this.dependencies = new LinkedList<String>();
 	}
 	
 	public FeaturedSentence(String sentence) {
@@ -44,6 +46,6 @@ public class FeaturedSentence {
 		this.dep_trees = null;
 		this.features = new LinkedList<SRFeature> ();
 		//
-		this.syntax_slices = new LinkedList<String>();
+		this.dependencies = new LinkedList<String>();
 	}
 }

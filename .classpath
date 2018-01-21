@@ -9,7 +9,7 @@
 	<classpathentry kind="lib" path="lib/stanford/stanford-segmenter-3.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/stanford/stanford-tregex-3.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/weka/weka-src.jar"/>
-	<classpathentry kind="lib" path="lib/weka/weka.jar"/>
+	<classpathentry kind="lib" path="lib/weka/weka.jar" sourcepath="lib/weka/weka-src.jar"/>
 	<classpathentry kind="lib" path="lib/ms_file/poi-scratchpad-3.12-20150511.jar"/>
 	<classpathentry kind="lib" path="lib/ms_file/poi-ooxml-3.12-20150511.jar"/>
 	<classpathentry kind="lib" path="lib/ms_file/poi-3.12-20150511.jar"/>

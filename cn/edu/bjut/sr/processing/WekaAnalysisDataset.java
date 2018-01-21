@@ -1,17 +1,13 @@
 package cn.edu.bjut.sr.processing;
 
-import java.awt.BorderLayout;
-import java.io.BufferedWriter;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.Random;
@@ -24,34 +20,24 @@ import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.functions.Logistic;
 import weka.classifiers.functions.SMO;
-import weka.classifiers.functions.supportVector.Kernel;
-import weka.classifiers.functions.supportVector.RBFKernel;
 import weka.classifiers.trees.J48;
-import weka.classifiers.trees.j48.ModelSelection;
-import weka.classifiers.trees.lmt.LMTNode;
 import weka.classifiers.trees.LMT;
-import weka.classifiers.trees.lmt.ResidualModelSelection;
+import weka.clusterers.AbstractClusterer;
 import weka.clusterers.ClusterEvaluation;
 import weka.clusterers.EM;
+
+import weka.clusterers.SimpleKMeans;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
-import weka.core.DistanceFunction;
-import weka.core.EuclideanDistance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.SelectedTag;
 import weka.core.converters.ArffSaver;
 import weka.core.stemmers.LovinsStemmer;
-import weka.core.stemmers.SnowballStemmer;
-import weka.core.stopwords.MultiStopwords;
-import weka.core.stopwords.StopwordsHandler;
 import weka.core.stopwords.WordsFromFile;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Add;
+import weka.filters.unsupervised.attribute.Remove;
 import weka.filters.unsupervised.attribute.StringToWordVector;
-import weka.gui.explorer.ClustererPanel;
-import weka.gui.visualize.PlotData2D;
-import weka.gui.visualize.VisualizePanel;
 import weka.classifiers.rules.DecisionTable;
 import weka.classifiers.rules.PART;
 
@@ -92,10 +78,7 @@ public class WekaAnalysisDataset {
 				labels.add(negative);
 				temp_att = new Attribute(srf.getFeature_name(), labels);
 			} else if (srf.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
-				ArrayList<String> labels = new ArrayList<String>();
-				labels.add(positive);
-				labels.add(negative);
-				temp_att = new Attribute(srf.getFeature_name(), labels);
+				temp_att = new Attribute(srf.getFeature_name());
 			}
 			else {
 				Log.error("wrong feature types");
@@ -129,7 +112,11 @@ public class WekaAnalysisDataset {
 						|| srf_temp.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE) {
 					// nominal
 					values[i] = dataset.attribute(i).indexOfValue(srf_temp.getFeature_value().toString());
-				} else {
+				} else if (srf_temp.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
+					// numeric
+					values[i] = Double.parseDouble(srf_temp.getFeature_value());
+				}
+				else {
 					Log.error("wrong feature types");
 				}
 			}
@@ -251,9 +238,9 @@ public class WekaAnalysisDataset {
 	 * data
 	 * 
 	 * @param processed_data
-	 * @param file_path
+	 * @param include_class
 	 * @param include_sen
-	 * @param output
+	 * @param file_path
 	 */
 	public void generateWekaDataFromSRP(LinkedList<FeaturedSentence> processed_data, boolean include_class,
 			boolean include_sen, String file_path) {
@@ -287,74 +274,83 @@ public class WekaAnalysisDataset {
 		}
 	}
 
+
 	/**
-	 * Customized clustering algorithm
+	 * Employing existing clustering algorithm (e.g., EM)
 	 * @throws Exception
 	 */
-	private void customized_clustering() throws Exception {
-
-		weka.clusterers.HierarchicalClusterer h = new weka.clusterers.HierarchicalClusterer();
-
-		DistanceFunction d = new EuclideanDistance();
-		h.setDistanceFunction(d);
-		SelectedTag s = new SelectedTag(0, weka.clusterers.HierarchicalClusterer.TAGS_LINK_TYPE);
-		h.setLinkType(s);
-		h.buildClusterer(dataset);
-
-		//BufferedWriter writer = new BufferedWriter(new FileWriter("temp.arff"));
-
-		ClusterEvaluation eval = new ClusterEvaluation();
-		eval.setClusterer(h);
-		eval.evaluateClusterer(dataset);
-		System.out.println(eval.clusterResultsToString());
-
-		//PlotData2D predData = ClustererPanel.setUpVisualizableInstances(dataset, eval);
-
-		// save data
-//		writer.write(predData.getPlotInstances().toString());
-//		writer.write(dataset.toString());
-//		writer.newLine();
-//		writer.flush();
-//		writer.close();
+	public void clustering(String method) throws Exception {
+		Instances new_dataset = removeClass(dataset);
+		
+		// remove class_attribute
+		AbstractClusterer clusterer = null;
+		
+		switch(method) {
+		case "EM":
+			String[] options = {"-I", "100", "-N", "20"}; //13, 20
+			clusterer = new EM(); // new instance of clusterer
+			clusterer.setOptions(options); // set the options
+			clusterer.buildClusterer(new_dataset); // build the clusterer
+			// print results
+			printClusteringResults(clusterer, new_dataset);
+			break;
+			
+		case "K-means":
+			int totalCluster = 6; // 8-10, 13...
+			clusterer = new SimpleKMeans(); 
+			((SimpleKMeans)clusterer).setSeed(100);
+			//important parameter to set: preserver order, number of cluster.
+			((SimpleKMeans)clusterer).setPreserveInstancesOrder(true);
+			((SimpleKMeans)clusterer).setNumClusters(totalCluster);
+			((SimpleKMeans)clusterer).buildClusterer(new_dataset);
+			// print results
+			printClusteringResults(clusterer, new_dataset);
+		}
+		
+//		DensityBasedClusterer clusterer = new Density 
+//		double logLikelyhood = ClusterEvaluation.crossValidateModel(
+//				clusterer, data, 10, new Random(1));
+//		
+	}
+	
+	private Instances removeClass(Instances data) throws Exception {
+		Remove filter = new Remove(); 
+		filter.setAttributeIndices("" + (data.classIndex() + 1)); 
+		filter.setInputFormat(data);
+		Instances new_data = Filter.useFilter(data, filter);
+		return new_data;
 	}
 
-	public void clustering() throws Exception {
-		String[] options = new String[2];
-		options[0] = "-I"; // max. iterations
-		options[1] = "100";
-		EM clusterer = new EM(); // new instance of clusterer
-		clusterer.setOptions(options); // set the options
-		clusterer.buildClusterer(dataset); // build the clusterer
-
+	private void printClusteringResults(AbstractClusterer clusterer, Instances new_dataset) throws Exception {
+		// print evaluation results
 		ClusterEvaluation eval = new ClusterEvaluation();
 		eval.setClusterer(clusterer);
-		eval.evaluateClusterer(new Instances(dataset));
+		eval.evaluateClusterer(new Instances(new_dataset));
 		System.out.println(eval.clusterResultsToString());
 
-		/**
-		 * 
-		 * // setup visualization // taken from: ClustererPanel.startClusterer()
-		 * PlotData2D predData = ClustererPanel.setUpVisualizableInstances(dataset,
-		 * eval); String name = (new SimpleDateFormat("HH:mm:ss - ")).format(new
-		 * Date()); String cname = clusterer.getClass().getName(); if
-		 * (cname.startsWith("weka.clusterers.")) name +=
-		 * cname.substring("weka.clusterers.".length()); else name += cname;
-		 * 
-		 * VisualizePanel vp = new VisualizePanel(); vp.setName(name + " (" +
-		 * dataset.relationName() + ")"); predData.setPlotName(name + " (" +
-		 * dataset.relationName() + ")"); vp.addPlot(predData);
-		 * 
-		 * // display data // taken from:
-		 * ClustererPanel.visualizeClusterAssignments(VisualizePanel) String plotName =
-		 * vp.getName(); final javax.swing.JFrame jf = new javax.swing.JFrame("Weka
-		 * Clusterer Visualize: " + plotName); jf.setSize(500,400);
-		 * jf.getContentPane().setLayout(new BorderLayout());
-		 * jf.getContentPane().add(vp, BorderLayout.CENTER); jf.addWindowListener(new
-		 * java.awt.event.WindowAdapter() { public void
-		 * windowClosing(java.awt.event.WindowEvent e) { jf.dispose(); } });
-		 * jf.setVisible(true);
-		 */
+		// print detailed evaluation results
+		double[] assignments=eval.getClusterAssignments();// obtain all assignments
+		int totalCluster = eval.getNumClusters();
+		int[] results = new int[totalCluster];
+		int[] all_assignments = new int[totalCluster];
+		int i=0;
+		for(double clusterNum : assignments) {
+			all_assignments[(int)clusterNum]++; // record size of each cluster
+			if(String.valueOf(dataset.get(i).stringValue(0)).equals("1")) {
+				//System.out.printf("Instance %d -> Cluster %d \n", i, clusterNum);
+				results[(int)clusterNum]++; // record the number of SRs in each cluster 
+			}
+		    i++;
+		}
+		float ratio = 0;
+		for(int j=0; j<totalCluster; j++) {
+			ratio = (float)results[j]/all_assignments[j];
+			System.out.printf("Cluster %d: %d/%d, %f\n", j, results[j], all_assignments[j], ratio);
+		}
+		
+
 	}
+	
 
 	/**
 	 * This function train a particular type of classifier using the dataset that
@@ -483,7 +479,7 @@ public class WekaAnalysisDataset {
 	}
 
 	/**
-	 * Output the obtained classifiers
+	 * Output the obtained classifiers to file
 	 * 
 	 * @param cf
 	 * @param output_classifier_path
@@ -495,6 +491,22 @@ public class WekaAnalysisDataset {
 		oos.writeObject(cf);
 		oos.flush();
 		oos.close();
+	}
+	
+	/**
+	 * Load models from files
+	 * @param model_path
+	 * @throws IOException
+	 */
+	public void loadModel(String model_path, boolean assign_class) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(model_path));
+		dataset = new Instances(reader);
+		reader.close();
+		
+		if(assign_class) {
+			assignClass();
+		}	
+		
 	}
 
 	public static void main(String[] args) {

@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.EnumSet;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Properties;
@@ -13,11 +13,12 @@ import java.util.Set;
 import cn.edu.bjut.text.processing.EnglishProcessing;
 import cn.edu.bjut.text.utility.IEnum;
 import cn.edu.bjut.text.utility.Log;
+import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.trees.Tree;
-import weka.classifiers.Classifier;
+import edu.stanford.nlp.trees.TypedDependency;
 
 
 
@@ -34,6 +35,104 @@ public class SRProcessing {
 	final String GPS = "2";
 	
 	
+	/**
+	 * This is a customized function for generating various dataset, in which parameters represent conditions
+	 * @param ori_data
+	 * @param include_class
+	 * @param include_sen
+	 * @param single_keyword
+	 * @param single_rule
+	 */
+	public String processDataAndGenerateArff(String ori_data, boolean include_class, boolean include_sen,  int keyword, int rule, int dep, WekaAnalysisDataset wa) {
+		String output_file_path = "output data/"; // this will be incrementally modified during the procedure
+	
+		// import files
+		for (Character c : ori_data.toCharArray()) {
+			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], include_class, include_sen);
+			// generate file name
+			output_file_path += c + "_";
+		}
+	
+		// whether contain the original sentence as a feature
+		if (include_sen) {
+			output_file_path += "sen_";
+		} else {
+			// output_file_path+="nsen_";
+		}
+	
+		// match keywords
+	
+		if (keyword == FeatureEnum.TRAIN_KEY_SINGLE) {
+			keywordMatchSingle();
+			// generate file name
+			output_file_path += "skey_";
+		} else if (keyword == FeatureEnum.TRAIN_KEY_MULTI) {
+			keywordMatch();
+			output_file_path += "mkey_";
+		} else if (keyword == FeatureEnum.TRAIN_KEY_NO) {
+	
+		} else {
+			Log.error("unexpected keyword parameter: " + keyword);
+		}
+	
+		// match linguistic rules based on particular syntactic rules
+		if (rule == FeatureEnum.TRAIN_RULE_SINGLE) {
+			linguisticAnalysis(false, true);
+			output_file_path += "srule_";
+		} else if (rule == FeatureEnum.TRAIN_RULE_MULTI) {
+			linguisticAnalysis(false, false);
+			output_file_path += "mrule_";
+		} else if (keyword == FeatureEnum.TRAIN_RULE_NO) {
+	
+		} else {
+			Log.error("unexpected rule parameter: " + rule);
+		}
+	
+		// match dependency rules based on dependency analysis
+		if (dep == FeatureEnum.TRAIN_DEP_NO) {
+			output_file_path = output_file_path.substring(0, output_file_path.length() - 1);
+			output_file_path += ".arff";
+		} else if (dep == FeatureEnum.TRAIN_DEP_SINGLE) {
+			dependencyAnalysis(true);
+			output_file_path += "sdep.arff";
+		} else if (dep == FeatureEnum.TRAIN_DEP_MULTI) {
+			dependencyAnalysis(false);
+			output_file_path += "mdep.arff";
+		} else {
+			Log.error("unexpected dependency parameter: " + dep);
+		}
+	
+		wa.generateWekaDataFromSRP(sentences, include_class, include_sen, output_file_path);
+	
+		return output_file_path;
+	}
+
+
+	/**
+	 * print current information of the featured dataset
+	 */
+	public void printData(){
+		boolean title =false;
+		for (FeaturedSentence fs : sentences){
+			//generate titles
+			if (!title) {
+				String first_row = ""; //FeatureEnumeration.SENTENCE+" ";
+				for (SRFeature srf: fs.features) {
+					first_row += srf.getFeature_name() + " ";
+				}
+				title = true;
+				Log.debug(first_row);
+			}
+			// generate content
+			String content = ""; //fs.sentence;
+			for (SRFeature srf: fs.features) {
+				content += srf.getFeature_value() + " ";
+			}
+			Log.debug(content);
+		}
+	}
+
+
 	/**
 	 * import a list of tagged sentences from csv files
 	 * modify global variable
@@ -278,64 +377,144 @@ public class SRProcessing {
 
 			if (fs.features.get(0).getFeature_value().equals("1")) {//print secure ones for learning
 				System.out.println(fs.ori_sentence);
+				
 				for (SemanticGraph sg : fs.dep_trees) {
-					System.out.println(sg.toString(SemanticGraph.OutputFormat.READABLE));
+					Collection<TypedDependency> dependencies = sg.typedDependencies();
+					for(TypedDependency td: dependencies) {
+						if (td.gov() != null && td.dep() != null) {
+							// gov
+							String gov_pos_tag = td.gov().toString();
+							int p1 = gov_pos_tag.indexOf("/");
+							if (p1!=-1) {
+								gov_pos_tag = gov_pos_tag.substring(p1+1);
+							}
+							// dep
+							String dep_pos_tag = td.dep().toString();
+							int p2 = dep_pos_tag.indexOf("/");
+							if (p2!=-1) {
+								dep_pos_tag = dep_pos_tag.substring(p2+1);
+							}
+							System.out.println(td.reln() + "(" + gov_pos_tag + ", " + dep_pos_tag + ")");
+						}
+					}
+//					System.out.println(sg.toString(SemanticGraph.OutputFormat.READABLE));
 				}
 			}
 		}
 	}
 	
 	
-	private Set<String> identifySyntaxSlices(){
-		//LinkedList<String> syntax_slice_set = new LinkedList();
-		Set<String> syntax_slice_set = new HashSet<String>();
-		// syntactic analysis
-		LexicalizedParser lp = null;
-		lp = LexicalizedParser.loadModel("parser/models/lexparser/englishPCFG.ser.gz");
-		
-		for (FeaturedSentence fs: sentences){
-			// parse sentences and generated a stemmed version, only for candidate match
-			String[] words = fs.ori_sentence.split(" ");
-			fs.parse = EnglishProcessing.parseSentence(lp, words, IEnum.ENGLISH, false);
-			// obtain all leaves, and go up to get all slices
-			ArrayList<Tree> leaves = (ArrayList<Tree>) fs.parse.getLeaves();
-			for(Tree leaf : leaves) {
-				// obtain the POSTag nodes, i.e., the parents of leaves   
-				Tree parent = leaf.ancestor(1, fs.parse);
-				Tree temp;
-				// traverse up to the root node, and generate all slices
-				while (parent!=null) {
-					temp = parent.ancestor(1, fs.parse);
-					if(temp!=null) {
-						String slice = parent.value()+"->"+temp.value();
-						// attach syntax slices to the sentence 
-						fs.syntax_slices.add(slice);
-						// record syntax slices, which will be used later 
-						syntax_slice_set.add(slice);
-//						System.out.println(slice);
-					}
-					parent = temp;
-				}				
-			}
-			//fs.stemmed_parse = EnglishProcessing.parseTreeStemmingNew(fs.parse);
+	/**
+	 * import data file and produce a set of syntax slices for clustering 
+	 * @param ori_data
+	 * @param wa
+	 * @param feature_type
+	 * @return
+	 */
+	public String processDataForSyntaxCluster(String ori_data, WekaAnalysisDataset wa, int feature_type) {
+		String output_file_path = "output data/"; // this will be incrementally modified during the procedure
+		// import files
+		for (Character c : ori_data.toCharArray()) {
+			// Note that here we include classification
+			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], true, false);
+			// generate file name
+			output_file_path += c + "_";
 		}
-		return syntax_slice_set;
+		// identify syntax slices
+		Set<String> syntax_slice_set = identifySyntaxSlices();
+		// generate featured sentences based on syntax slices
+		generateSyntaxSliceFeature(syntax_slice_set, feature_type);
+		// output file name
+		if(feature_type==FeatureEnum.FT_SYNTAX_SLICE) {
+			output_file_path += "syn_slice.arff";
+		} else if(feature_type==FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
+			output_file_path += "syn_slice_num.arff";
+		} else {
+			Log.error("processDataForSyntaxCluster -> wrong feature types: "+ feature_type);
+		}
+		// generate dataset for weka analysis
+		wa.generateWekaDataFromSRP(sentences, true, false, output_file_path);
+		return output_file_path;
 	}
+
 	
+	
+
+
+	private Set<String> identifySyntaxSlices(){
+			//LinkedList<String> syntax_slice_set = new LinkedList();
+			Set<String> syntax_slice_set = new HashSet<String>();
+			// syntactic analysis
+			LexicalizedParser lp = null;
+			lp = LexicalizedParser.loadModel("parser/models/lexparser/englishPCFG.ser.gz");
+			
+			for (FeaturedSentence fs: sentences){
+				// parse sentences and generated a stemmed version, only for candidate match
+				String[] words = fs.ori_sentence.split(" ");
+				fs.parse = EnglishProcessing.parseSentence(lp, words, IEnum.ENGLISH, false);
+				// obtain all leaves, and go up to get all slices
+				ArrayList<Tree> leaves = (ArrayList<Tree>) fs.parse.getLeaves();
+				for(Tree leaf : leaves) {
+					// obtain the POSTag nodes, i.e., the parents of leaves   
+					Tree parent = leaf.ancestor(1, fs.parse);
+					Tree temp;
+					// traverse up to the root node, and generate all slices
+					while (parent!=null) {
+						temp = parent.ancestor(1, fs.parse);
+						if(temp!=null) {
+							String slice = parent.value()+"->"+temp.value();
+							// attach syntax slices to the sentence 
+							fs.syntax_slices.add(slice);
+							// record syntax slices, which will be used later 
+							syntax_slice_set.add(slice);
+	//						System.out.println(slice);
+						}
+						parent = temp;
+					}				
+				}
+				//fs.stemmed_parse = EnglishProcessing.parseTreeStemmingNew(fs.parse);
+			}
+			return syntax_slice_set;
+		}
+
+
 	/**
 	 * generate slice features according to identified syntax slices
 	 * @param syntax_slice_set
 	 */
-	private void generateSyntaxSliceFeature(Set<String> syntax_slice_set) {
+	private void generateSyntaxSliceFeature(Set<String> syntax_slice_set, int feature_type) {
 		// TODO Auto-generated method stub
 		for(FeaturedSentence fs: sentences) {
 			
 			for (String slice : syntax_slice_set) {
 				if (fs.syntax_slices.contains(slice)){// if keyword is found,
 					// add feature value
-					fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE, "1"));
+					if(feature_type==FeatureEnum.FT_SYNTAX_SLICE) {
+						fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE, "1"));
+					}
+					else if(feature_type==FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
+						int count = 0;
+						//calculate the number of occurrence  
+						for(String temp_slice: fs.syntax_slices) {
+							if(temp_slice.equals(slice)) {
+								count++;
+							}
+						}
+						fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE_NUMERIC, Integer.toString(count)));
+					}
+					else {
+						Log.error("generateSyntaxSliceFeature -> unexpected feature type: " + feature_type);
+					}
 				} else {
-					fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE, "0"));
+					if(feature_type==FeatureEnum.FT_SYNTAX_SLICE) {
+						fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE, "0"));
+					}
+					else if(feature_type==FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
+						fs.features.add(new SRFeature(slice, FeatureEnum.FT_SYNTAX_SLICE_NUMERIC, "0"));
+					}
+					else {
+						Log.error("generateSyntaxSliceFeature -> unexpected feature type: " + feature_type);
+					}
 				}
 			}
 			
@@ -344,152 +523,116 @@ public class SRProcessing {
 	
 	
 	/**
-	 * This is a customized function for generating various dataset, in which parameters represent conditions
-	 * @param ori_data
-	 * @param include_class
-	 * @param include_sen
-	 * @param single_keyword
-	 * @param single_rule
-	 */
-	public String processDataAndGenerateArff(String ori_data, boolean include_class, boolean include_sen,  int keyword, int rule, int dep, WekaAnalysisDataset wa) {
-		String output_file_path = "output data/"; // this will be incrementally modified during the procedure
-
-		// import files
-		for (Character c : ori_data.toCharArray()) {
-			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], include_class, include_sen);
-			// generate file name
-			output_file_path += c + "_";
-		}
-
-		// whether contain the original sentence as a feature
-		if (include_sen) {
-			output_file_path += "sen_";
-		} else {
-			// output_file_path+="nsen_";
-		}
-
-		// match keywords
-
-		if (keyword == FeatureEnum.TRAIN_KEY_SINGLE) {
-			keywordMatchSingle();
-			// generate file name
-			output_file_path += "skey_";
-		} else if (keyword == FeatureEnum.TRAIN_KEY_MULTI) {
-			keywordMatch();
-			output_file_path += "mkey_";
-		} else if (keyword == FeatureEnum.TRAIN_KEY_NO) {
-
-		} else {
-			Log.error("unexpected keyword parameter: " + keyword);
-		}
-
-		// match linguistic rules based on particular syntactic rules
-		if (rule == FeatureEnum.TRAIN_RULE_SINGLE) {
-			linguisticAnalysis(false, true);
-			output_file_path += "srule_";
-		} else if (rule == FeatureEnum.TRAIN_RULE_MULTI) {
-			linguisticAnalysis(false, false);
-			output_file_path += "mrule_";
-		} else if (keyword == FeatureEnum.TRAIN_RULE_NO) {
-
-		} else {
-			Log.error("unexpected rule parameter: " + rule);
-		}
-
-		// match dependency rules based on dependency analysis
-		if (dep == FeatureEnum.TRAIN_DEP_NO) {
-			output_file_path = output_file_path.substring(0, output_file_path.length() - 1);
-			output_file_path += ".arff";
-		} else if (dep == FeatureEnum.TRAIN_DEP_SINGLE) {
-			dependencyAnalysis(true);
-			output_file_path += "sdep.arff";
-		} else if (dep == FeatureEnum.TRAIN_DEP_MULTI) {
-			dependencyAnalysis(false);
-			output_file_path += "mdep.arff";
-		} else {
-			Log.error("unexpected dependency parameter: " + dep);
-		}
-
-		wa.generateWekaDataFromSRP(sentences, include_class, include_sen, output_file_path);
-
-		return output_file_path;
-	}
-	
-	/**
-	 * import data file and produce a set of syntax slices for clustering 
+	 * import data file and produce a set of semantic dependencies for clustering 
 	 * @param ori_data
 	 * @param wa
 	 * @return
 	 */
-	public String processDataForSyntaxCluster(String ori_data, WekaAnalysisDataset wa) {
+	public String processDataForDependencyCluster(String ori_data, WekaAnalysisDataset wa, int feature_type) {
 		String output_file_path = "output data/"; // this will be incrementally modified during the procedure
-
 		// import files
 		for (Character c : ori_data.toCharArray()) {
-			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], false, false);
+			// Note that here we include classification
+			importSentencesFromCSV(data_files[Integer.valueOf(c.toString())], true, false);
 			// generate file name
 			output_file_path += c + "_";
 		}
 		
-		// identify syntax slices
-		Set<String> syntax_slice_set = identifySyntaxSlices();
-		// generate featured sentences based on syntax slices
-		generateSyntaxSliceFeature(syntax_slice_set);
-		// output file name
-		output_file_path += "syn_slice.arff";
+//		dependencyAnalysis(false);
 		
-		wa.generateWekaDataFromSRP(sentences, false, false, output_file_path);
-
+		
+		// identify syntax slices
+		Set<String> dependency_set = identifyDependencies();
+		// generate featured sentences based on syntax slices
+//		generateDependencyFeature(dependency_set, feature_type);
+		
+		/*
+		// output file name
+		if(feature_type==FeatureEnum.FT_SYNTAX_SLICE) {
+			output_file_path += "syn_slice.arff";
+		} else if(feature_type==FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
+			output_file_path += "syn_slice_num.arff";
+		} else {
+			Log.error("processDataForSyntaxCluster -> wrong feature types: "+ feature_type);
+		}
+		
+		// generate dataset for weka analysis
+		wa.generateWekaDataFromSRP(sentences, true, false, output_file_path);
+		
+		*/
 		return output_file_path;
 	}
 
-	
-	
 
-
-	/**
-	 * print current information of the featured dataset
-	 */
-	public void printData(){
-		boolean title =false;
-		for (FeaturedSentence fs : sentences){
-			//generate titles
-			if (!title) {
-				String first_row = ""; //FeatureEnumeration.SENTENCE+" ";
-				for (SRFeature srf: fs.features) {
-					first_row += srf.getFeature_name() + " ";
+	private Set<String> identifyDependencies() {
+		//LinkedList<String> syntax_slice_set = new LinkedList();
+		Set<String> dependency_set = new HashSet<String>();
+		
+		// Create NLP analyzer
+		Properties props = new Properties();
+		// props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref, sentiment");
+		props.setProperty("annotators", "tokenize, ssplit, pos, parse, sentiment");
+		StanfordCoreNLP analyzer = new StanfordCoreNLP(props);
+		
+		for (FeaturedSentence fs : sentences) {
+			System.out.println(fs.ori_sentence);
+			fs.dep_trees = EnglishProcessing.dependencyAnalysisGivenAnalyzer(analyzer, fs.ori_sentence);
+			
+			ss
+			
+			/*
+			// dep_trees can go wrong?
+			for (SemanticGraph sg : fs.dep_trees) {
+				Collection<TypedDependency> dependencies = sg.typedDependencies();
+				for (TypedDependency td : dependencies) {
+					if (td.gov() != null && td.dep() != null) {
+						// gov
+						String gov_pos_tag = td.gov().toString();
+						int p1 = gov_pos_tag.indexOf("/");
+						if (p1 != -1) {
+							gov_pos_tag = gov_pos_tag.substring(p1 + 1);
+						}
+						// dep
+						String dep_pos_tag = td.dep().toString();
+						int p2 = dep_pos_tag.indexOf("/");
+						if (p2 != -1) {
+							dep_pos_tag = dep_pos_tag.substring(p2 + 1);
+						}
+						String dependency = td.reln() + "(" + gov_pos_tag + ", " + dep_pos_tag + ")";
+						//
+						fs.dependencies.add(dependency);
+						dependency_set.add(dependency);
+					}
 				}
-				title = true;
-				Log.debug(first_row);
 			}
-			// generate content
-			String content = ""; //fs.sentence;
-			for (SRFeature srf: fs.features) {
-				content += srf.getFeature_value() + " ";
-			}
-			Log.debug(content);
+			*/
 		}
-	}
-	
-	
 
-	
-	
+		return null;
+	}
+
+
 	public static void main(String[] args) throws Exception{
 		SRProcessing srp1 = new SRProcessing();
 		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 
-		// load dataset
+		// prepare classification dataset
 //		String data_file_path = srp1.processDataAndGenerateArff("1", false, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
-//		wa1.clustering();
 		
-		String data_file_path = srp1.processDataForSyntaxCluster("1", wa1);
+		// prepare syntax clustering dataset
+//		String data_file_path = srp1.processDataForSyntaxCluster("1", wa1, FeatureEnum.FT_SYNTAX_SLICE_NUMERIC);
+		// prepare semantic dependency clustering dataset
+		String data_file_path = srp1.processDataForDependencyCluster("1", wa1, FeatureEnum.FT_SEMANTIC_DEPENDENCY_NUMERIC);
 		
-		wa1.clustering();
 		
-		// read data from file
-		// use different cluster algorithm
-		// print the results of algorithms
+		// load dataset from file
+//		wa1.loadModel("output data/1_syn_slice.arff", true);
+//		wa1.loadModel("output data/1_syn_slice_num.arff", true);
+		
+//		wa1.clustering("K-means");
+//		wa1.clustering("EM");
+
+				
 		
 		
 	}
