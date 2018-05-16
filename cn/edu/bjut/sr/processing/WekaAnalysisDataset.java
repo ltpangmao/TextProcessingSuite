@@ -472,8 +472,8 @@ public class WekaAnalysisDataset {
 			DecimalFormat df = new DecimalFormat("#.##");// .format(dblVar);
 			// Log.info(eval.toSummaryString("\n\n"+cf.getClass().getName()+ " "+ a+"-fold
 			// "+" Results", false));
-			Log.info(cf.getClass().getName() + "   " + a + "-fold " + " Results");
-			Log.info("Precision: " + df.format(eval.precision(0)) + "\n" + "Recall: " + df.format(eval.recall(0)) + "\n"
+			Log.debug(cf.getClass().getName() + "   " + a + "-fold " + " Results");
+			Log.debug("Precision: " + df.format(eval.precision(0)) + "\n" + "Recall: " + df.format(eval.recall(0)) + "\n"
 					+ "F-Measure: " + df.format(eval.fMeasure(0)) + "\n");
 		}
 		return eval;

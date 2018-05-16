@@ -17,10 +17,10 @@ public class Experiments {
 	 * individual evaluation
 	 * @throws Exception
 	 */
-	public static void individualExperiment() throws Exception{
+	public static void individualExperiment(String method) throws Exception{
 		// all experiments
-		String [] experiments = {"0","1","2","01","02","12","012"};
-//		String [] experiments = {"1"};
+//		String [] experiments = {"0","1","2","01","02","12","012","3"};
+		String [] experiments = {"3"};
 		
 		LinkedList<EvaluationResult> eval_results = new LinkedList<EvaluationResult>();
 
@@ -32,18 +32,21 @@ public class Experiments {
 
 			// load dataset
 			String data_file_path = srp1.processDataAndGenerateArff(experiment, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
-			Log.info("Dataset "+experiment);
+//			String data_file_path = srp1.processDataAndGenerateArff(experiment, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_SINGLE, FeatureEnum.TRAIN_DEP_NO, wa1);
+
+//			Log.info("Dataset "+experiment);
 			// train classifier
 			Classifier temp;
 			String model_file_path = "";
-	//		temp = wa1.trainClassifier("NB");
+//			temp = wa1.trainClassifier("NB");
 	//		temp = wa1.trainClassifier("BN");
-	//		temp = wa1.trainClassifier("LMT");
-			temp = wa1.trainClassifier("J48");
+//			temp = wa1.trainClassifier("LMT");
+//			temp = wa1.trainClassifier("J48");
 //			temp = wa1.trainClassifier("SMO");
 	//		temp = wa1.trainClassifier("Logistic");
 	//		temp = wa1.trainClassifier("DT");
-	//		temp = wa1.trainClassifier("PART");
+//			temp = wa1.trainClassifier("PART");
+			temp = wa1.trainClassifier(method);
 			// evaluate the classifer
 			Evaluation eval = wa1.crossEvaluate(temp);
 			// record the results in a predefined order
@@ -97,21 +100,29 @@ public class Experiments {
 	 * cross-domain evaluation
 	 * @throws Exception
 	 */
-	public static void crossDomainExperiment() throws Exception{
-		SRProcessing srp1 = new SRProcessing();
-		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
-		// load the training dataset to wa1
-		srp1.processDataAndGenerateArff("12", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+	public static void crossDomainExperiment(String evaluated_set) throws Exception{
 		
-		// load the test dataset to wa2
-		SRProcessing srp2 = new SRProcessing();
-		WekaAnalysisDataset wa2 = new WekaAnalysisDataset();
-		// load another dataset
-		srp2.processDataAndGenerateArff("0", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
-		
-//		wa1.classifyUseTrainTestData(wa2, "J48", null);
-		Classifier temp = wa1.trainClassifier("J48");
-		wa1.evaluateWithTestData(temp, wa2, null);
+		String[] data_sets = {"0","1","2","01","02","12","012"};
+		for(String data_set:data_sets) {
+			SRProcessing srp1 = new SRProcessing();
+			WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
+			if(!data_set.contains(evaluated_set)) {
+				System.out.print(data_set +"->"+evaluated_set);
+				// load the training dataset to wa1
+				srp1.processDataAndGenerateArff(data_set, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+				
+				// load the test dataset to wa2
+				SRProcessing srp2 = new SRProcessing();
+				WekaAnalysisDataset wa2 = new WekaAnalysisDataset();
+				// load another dataset
+				srp2.processDataAndGenerateArff(evaluated_set, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
+				
+		//		wa1.classifyUseTrainTestData(wa2, "J48", null);
+				Classifier temp = wa1.trainClassifier("J48");
+				wa1.evaluateWithTestData(temp, wa2, null);
+
+			}
+		}
 	}
 	
 	
@@ -123,13 +134,13 @@ public class Experiments {
 		SRProcessing srp1 = new SRProcessing();
 		WekaAnalysisDataset wa1 = new WekaAnalysisDataset();
 		// load dataset
-		srp1.processDataAndGenerateArff("2", true, true, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+		srp1.processDataAndGenerateArff("0", true, true, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
 		
 		// try the previous model on another dataset
 		SRProcessing srp2 = new SRProcessing();
 		WekaAnalysisDataset wa2 = new WekaAnalysisDataset();
 		// load another dataset
-		srp2.processDataAndGenerateArff("0", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
+		srp2.processDataAndGenerateArff("1", true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
 		
 		Classifier temp = wa1.trainClassifier("J48");
 		wa1.evaluateWithTestData(temp, wa2, wa1.word_features);
@@ -169,8 +180,15 @@ public class Experiments {
 	}
 
 	public static void main(String[] args) throws Exception {
-		individualExperiment();
-//		crossDomainExperiment();
+//		String methods[] = {"NB","BN","LMT","J48","SMO","Logistic","DT","PART"};
+//		for(String method:methods) {
+//			System.out.println("\n\n\n**********"+method);
+//			individualExperiment(method);
+//		}
+		
+		
+		
+		crossDomainExperiment("0");
 //		crossDomainWithAttributeExperiment();
 //		loadClassifierExperiment();
 	}
