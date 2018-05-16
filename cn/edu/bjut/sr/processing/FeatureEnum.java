@@ -1,9 +1,16 @@
 package cn.edu.bjut.sr.processing;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections.ListUtils;
 
 import cn.edu.bjut.text.utility.Log;
+import edu.stanford.nlp.util.ArrayUtils;
 
 
 
@@ -11,7 +18,7 @@ import cn.edu.bjut.text.utility.Log;
 public class FeatureEnum {
 	//Training parameters
 	public static final int TRAIN_KEY_NO = 0;
-	public static final int TRAIN_KEY_SINGLE = 1;
+	public static final int TRAIN_KEY_SINGLE = 1;  // make a single feature, which holds true when any keyword is matched
 	public static final int TRAIN_KEY_MULTI = 2;
 	public static final int TRAIN_RULE_NO = 0;
 	public static final int TRAIN_RULE_SINGLE = 1;
@@ -61,38 +68,103 @@ public class FeatureEnum {
 	public static String CATEGORY = "category";
 	public static String SENTENCE = "sentence";
 
-	public static String[] KEYWORD = {
+	public static String[] SP = {
 			//Security Property
 			"security", "identification", "authentication", "authorization", 
 			"integrity", "immunity", "anonymity", "confidentiality", "privacy",
 			"availability", "non-repudiation", "accountability", "business continuity", "reliability",
+	};
+	public static String[] SM = {
 			// Security Mechanism
 			"auditing", "access control", "proof", "key", "lock", "pin", "detection",
 			"validation", "verification", "awareness", "education", "training",
-			"back-up", "clear desk", "clear screen", "clock synchronization",
+			"backup", "clear desk", "clear screen", "clock synchronization",
 			"cryptography", "disposal", "log", "monitoring", "segregation", "separation", 
 			"password", "screening", "protection",
 			"compliance", "restriction", "assurance", "permission",
+			/*new*/
+			// from two-word phrases
+			"security manangement", "digital signiture", "control", "security	gateways", "firewall", 
+			"encryption", "security mechanism","safeguard", "dmz", "demilitarized zone", "security check",
+			
+			// detailed check based on SM titles
+			"adapted segmentation",
+			"galvanic separation",
+			"sealing",
+			"safety doors",
+			"automatic drainage",
+			"alarm system",
+			"uninterruptible power supply", "ups",
+			"safeguard",
+			"safekeeping",
+			"shield", 
+			"anti-theft",
+			"surveillance",
+
+			
+	};
+	public static String[] TH = {
 			// Threat
 			"fraud", "error", "bug", "vulnerability", "risk", "fault", "leakage", "misuse",
 			"virus",
+			/*new*/
+			"hacker","loophole","threat",
+	};
+	public static String[] EL = {
 			// Eliminate
 			"eliminate", "get rid of", "stop", "reduce", "avoid",
+			/*new*/
+	};
+	public static String[] PR = {		
 			// Protect
 			"protect", "defend", "save",
+	};
+	public static String[] AC = {
 			// Achieve
 			"achieve", "obtain", "satisfy", "fulfill",
+	};
+	public static String[] PV = {
 			// Provide
 			"provide", "have", "implement", "deploy", 
+	};
+	public static String[] RE = {
 			// Restrict
-			"restrict", "limit", 
+			"restrict", "limit",
+	};
+	public static String[] AS = {
 			// Assure
 			"assure", "ensure",
+	};
+	public static String[] PE = {
 			// Permit
 			"permit", "allow", "admit",
-			// Permit
+	};
+	public static String[] OB = {
+			// Obey
 			"obey", "comply", "subject to", 
 	};
+			
+	public static Object[] KEYWORD;
+	
+	// initialize KEYWORD by combining all keyword sets
+	static {
+		// remove duplicates 
+		// Arrays.asList(SM).stream().distinct().collect(Collectors.toList());
+		List list = new ArrayList(Arrays.asList(SP).stream().distinct().collect(Collectors.toList()));
+	    list.addAll(Arrays.asList(SM).stream().distinct().collect(Collectors.toList()));
+	    list.addAll(Arrays.asList(TH).stream().distinct().collect(Collectors.toList()));
+	    list.addAll(Arrays.asList(EL));
+	    list.addAll(Arrays.asList(PR));
+	    list.addAll(Arrays.asList(AC));
+	    list.addAll(Arrays.asList(PV));
+	    list.addAll(Arrays.asList(RE));
+	    list.addAll(Arrays.asList(AS));
+	    list.addAll(Arrays.asList(PE));
+	    list.addAll(Arrays.asList(OB));
+	    
+	    KEYWORD = list.toArray();
+	}
+	
 	
 	public static String[] RULE = {
 			"T", "A", "S", "C1", "C2", "C3", "C4", "C5",
@@ -185,6 +257,62 @@ public class FeatureEnum {
 	public static final Map<String, String> KEYWORD_CLASS = new HashMap<String, String>();
 	static {
 		//Security Property
+		for (String s: SP) {
+			KEYWORD_CLASS.put(s, SECURITY_PROPERTY);
+		}
+		
+		//Security Mechanism
+		for (String s: SM) {
+			KEYWORD_CLASS.put(s, SECURITY_MECHANISM);
+		}
+		
+		//Threat
+		for (String s: TH) {
+			KEYWORD_CLASS.put(s, THREAT);
+		}
+		
+		// Eliminate
+		for (String s: EL) {
+			KEYWORD_CLASS.put(s, ELIMINATE);
+		}
+		
+		// Protect
+		for (String s: PR) {
+			KEYWORD_CLASS.put(s, PROTECT);
+		}
+		
+		// Achieve
+		for (String s: AC) {
+			KEYWORD_CLASS.put(s, ACHIEVE);
+		}
+		
+		// Provide
+		for (String s: PV) {
+			KEYWORD_CLASS.put(s, PROVIDE);
+		}
+		
+		// Restrict
+		for (String s: RE) {
+			KEYWORD_CLASS.put(s, RESTRICT);
+		}
+		
+		// Assure
+		for (String s: AS) {
+			KEYWORD_CLASS.put(s, ASSURE);
+		}
+		
+		// Permit
+		for (String s: PE) {
+			KEYWORD_CLASS.put(s, PERMIT);
+		}
+		
+		// Obey
+		for (String s: OB) {
+			KEYWORD_CLASS.put(s, OBEY);
+		}
+		
+		/*
+		//Security Property
 		KEYWORD_CLASS.put("security", SECURITY_PROPERTY);
 		KEYWORD_CLASS.put("identification", SECURITY_PROPERTY);
 		KEYWORD_CLASS.put("authentication", SECURITY_PROPERTY);
@@ -211,7 +339,7 @@ public class FeatureEnum {
 		KEYWORD_CLASS.put("verification", SECURITY_MECHANISM);
 		KEYWORD_CLASS.put("awareness", SECURITY_MECHANISM);
 		KEYWORD_CLASS.put("training", SECURITY_MECHANISM);
-		KEYWORD_CLASS.put("back-up", SECURITY_MECHANISM);
+		KEYWORD_CLASS.put("backup", SECURITY_MECHANISM);
 		KEYWORD_CLASS.put("clear desk", SECURITY_MECHANISM);
 		KEYWORD_CLASS.put("clear screen", SECURITY_MECHANISM);
 		KEYWORD_CLASS.put("clock synchronization", SECURITY_MECHANISM);
@@ -278,10 +406,11 @@ public class FeatureEnum {
 		KEYWORD_CLASS.put("allow", PERMIT);
 		KEYWORD_CLASS.put("admit", PERMIT);
 
-		// Permit
+		// Obey
 		KEYWORD_CLASS.put("obey", OBEY);
 		KEYWORD_CLASS.put("comply", OBEY);
 		KEYWORD_CLASS.put("subject to", OBEY);
+		*/
 	}
 	
 	

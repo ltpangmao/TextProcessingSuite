@@ -168,7 +168,8 @@ public class WekaAnalysisDataset {
 			if (att.name().equals(FeatureEnum.CATEGORY)) {
 				vector = false;
 			}
-			for (String keyword : FeatureEnum.KEYWORD) {
+			for (Object temp : FeatureEnum.KEYWORD) {
+				String keyword = (String)temp;
 				if (att.name().equals(keyword)) {
 					vector = false;
 					break;

@@ -15,5 +15,6 @@
 	<classpathentry kind="lib" path="lib/ms_file/poi-3.12-20150511.jar"/>
 	<classpathentry kind="lib" path="lib/stanford/ejml-0.23.jar"/>
 	<classpathentry kind="lib" path="/Users/tongli/study/NLP-learning/Standford Parser/new/stanford-corenlp-full-2017-06-09/stanford-corenlp-3.8.0-models.jar"/>
+	<classpathentry kind="lib" path="lib/commons-collections-3.2.1-1.0.0.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>

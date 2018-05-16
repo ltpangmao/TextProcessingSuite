@@ -193,7 +193,8 @@ public class SRProcessing {
 		String s1, s2 = "";
 		String sr_concept = "";
 		for (FeaturedSentence fs : sentences) {
-			for (String kw : FeatureEnum.KEYWORD) {
+			for (Object temp : FeatureEnum.KEYWORD) {
+				String kw = (String)temp;
 				s1 = EnglishProcessing.wordStemming(kw);
 				s2 = EnglishProcessing.sentenceStemming(fs.ori_sentence);
 				if (s2.contains(s1)) {// if keyword is found,
@@ -223,7 +224,8 @@ public class SRProcessing {
 		boolean keyword_found; // prepared for the single feature processing
 		for (FeaturedSentence fs : sentences) {
 			keyword_found = false;
-			for (String kw : FeatureEnum.KEYWORD) {
+			for (Object temp : FeatureEnum.KEYWORD) {
+				String kw = (String)temp;
 				s1 = EnglishProcessing.wordStemming(kw);
 				s2 = EnglishProcessing.sentenceStemming(fs.ori_sentence);
 				if (s2.contains(s1)) {// if keyword is found,
@@ -578,7 +580,7 @@ public class SRProcessing {
 			System.out.println(fs.ori_sentence);
 			fs.dep_trees = EnglishProcessing.dependencyAnalysisGivenAnalyzer(analyzer, fs.ori_sentence);
 			
-			ss
+			
 			
 			/*
 			// dep_trees can go wrong?

@@ -40,7 +40,7 @@ public class Experiments {
 	//		temp = wa1.trainClassifier("BN");
 	//		temp = wa1.trainClassifier("LMT");
 			temp = wa1.trainClassifier("J48");
-	//		temp = wa1.trainClassifier("SMO");
+//			temp = wa1.trainClassifier("SMO");
 	//		temp = wa1.trainClassifier("Logistic");
 	//		temp = wa1.trainClassifier("DT");
 	//		temp = wa1.trainClassifier("PART");
