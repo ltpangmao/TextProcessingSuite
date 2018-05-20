@@ -84,7 +84,7 @@ public class SRProcessing {
 		} else if (rule == FeatureEnum.TRAIN_RULE_MULTI) {
 			linguisticAnalysis(false, false);
 			output_file_path += "mrule_";
-		} else if (keyword == FeatureEnum.TRAIN_RULE_NO) {
+		} else if (rule == FeatureEnum.TRAIN_RULE_NO) {
 	
 		} else {
 			Log.error("unexpected rule parameter: " + rule);

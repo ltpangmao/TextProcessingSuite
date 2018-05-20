@@ -21,7 +21,8 @@ public class Word {
 		this.type = type;
 	}
 	
-	public void wordPrint(){
-		System.out.println(content + " " + type);
+	public void wordPrint(String s){
+//		System.out.println(content + " " + type);
+		System.out.println("we"+ s);
 	}
 }

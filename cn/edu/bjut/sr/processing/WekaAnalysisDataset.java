@@ -42,7 +42,8 @@ import weka.classifiers.rules.DecisionTable;
 import weka.classifiers.rules.PART;
 
 public class WekaAnalysisDataset {
-
+	int instance_weight = 1;
+	
 	private static final String positive = "1";
 	private static final String negative = "0";
 
@@ -62,30 +63,32 @@ public class WekaAnalysisDataset {
 		// prepare attributes
 		for (SRFeature srf : sentences.getFirst().features) {
 			Attribute temp_att = null;
+			// labels to be added
+			ArrayList<String> labels = new ArrayList<String>();
+			labels.add(positive);
+			labels.add(negative);
+
 			if (srf.getFeature_type() == FeatureEnum.FT_SENTENCE) {
 				// textual
 				temp_att = new Attribute(srf.getFeature_name(), (ArrayList<String>) null);
 			} else if (srf.getFeature_type() == FeatureEnum.FT_CATEGORY) {
-				ArrayList<String> labels = new ArrayList<String>();
-				labels.add(positive);
-				labels.add(negative);
 				temp_att = new Attribute(srf.getFeature_name(), labels);
-			} else if (srf.getFeature_type() == FeatureEnum.FT_KEYWORD
-					|| srf.getFeature_type() == FeatureEnum.FT_RULE
-					|| srf.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE) {
-				ArrayList<String> labels = new ArrayList<String>();
-				labels.add(positive);
-				labels.add(negative);
+			} else if (srf.getFeature_type() == FeatureEnum.FT_KEYWORD) {
+				temp_att = new Attribute(srf.getFeature_name(), labels);
+				temp_att.setWeight(20); ///////////
+			} else if (srf.getFeature_type() == FeatureEnum.FT_RULE) {
+				temp_att = new Attribute(srf.getFeature_name(), labels);
+				temp_att.setWeight(2); ///////////
+			} else if (srf.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE) {
 				temp_att = new Attribute(srf.getFeature_name(), labels);
 			} else if (srf.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE_NUMERIC) {
 				temp_att = new Attribute(srf.getFeature_name());
-			}
-			else {
+			} else {
 				Log.error("wrong feature types");
 			}
 			attributes.add(temp_att);
 		}
-		dataset = new Instances("Security requirements", attributes, 10000); // temporally set the size to 1000
+		dataset = new Instances("Security requirements", attributes, 10000); // temporally set the size to 10000
 	}
 
 	/**
@@ -99,6 +102,7 @@ public class WekaAnalysisDataset {
 				return;
 			}
 			double[] values = new double[dataset.numAttributes()];
+			boolean cate_value = false;
 			for (int i = 0; i < fs.features.size(); i++) {
 				SRFeature srf_temp = fs.features.get(i);
 				if (srf_temp.getFeature_type() == FeatureEnum.FT_SENTENCE) {
@@ -107,6 +111,9 @@ public class WekaAnalysisDataset {
 				} else if (srf_temp.getFeature_type() == FeatureEnum.FT_CATEGORY) {
 					// nominal
 					values[i] = dataset.attribute(i).indexOfValue(srf_temp.getFeature_value().toString());
+					if(srf_temp.getFeature_value().toString().equals("1")) {
+						cate_value =true;
+					}
 				} else if (srf_temp.getFeature_type() == FeatureEnum.FT_KEYWORD
 						|| srf_temp.getFeature_type() == FeatureEnum.FT_RULE
 						|| srf_temp.getFeature_type() == FeatureEnum.FT_SYNTAX_SLICE) {
@@ -122,7 +129,13 @@ public class WekaAnalysisDataset {
 			}
 			// add this instance
 			Instance inst = new DenseInstance(1.0, values);
+			// increasing  weights of positive instances
+			if(cate_value) {
+				inst.setWeight(instance_weight);
+			}
 			dataset.add(inst);
+			
+			
 		}
 	}
 
@@ -418,12 +431,16 @@ public class WekaAnalysisDataset {
 	public Evaluation evaluateWithTestData(Classifier cf, WekaAnalysisDataset wa_test,
 			LinkedList<Attribute> word_vectors) throws Exception {
 		Instances test_data = wa_test.dataset;
-		;
+		
 		if (word_vectors != null) { // if want to use these vectors...
 			test_data = stringToVectorUsingWordList(wa_test.dataset, wa_test.sentences, word_vectors);
 		}
 		test_data.setClassIndex(0);
-
+		// reset instance's weight of test_data
+		for(int i=0;i<test_data.numInstances();i++) {
+			test_data.instance(i).setWeight(1);
+		}
+		
 		// set training and test data
 		Evaluation eval = new Evaluation(dataset); // set training dataset
 		eval.evaluateModel(cf, test_data); // set test dataset
@@ -465,6 +482,10 @@ public class WekaAnalysisDataset {
 			// long output = lEndTime - lStartTime;
 			// Log.info("Elapsed time in milliseconds: " + output / 1000000);
 
+			// reset instance's weight
+			for(int i=0;i<dataset.numInstances();i++) {
+				dataset.instance(i).setWeight(1);
+			}
 			// evaluate (cross validation)
 			eval = new Evaluation(dataset);
 			eval.crossValidateModel(cf, dataset, a, new Random(1));
@@ -510,13 +531,13 @@ public class WekaAnalysisDataset {
 		
 	}
 
-	public static void main(String[] args) {
-
-		WordsFromFile wff = new WordsFromFile();
-		wff.setStopwords(new File("original data//stopwords.txt"));
-
-		System.out.println(wff.isStopword("authentication"));
-
-	}
+//	public static void main(String[] args) {
+//
+//		WordsFromFile wff = new WordsFromFile();
+//		wff.setStopwords(new File("original data//stopwords.txt"));
+//
+//		System.out.println(wff.isStopword("authentication"));
+//
+//	}
 
 }

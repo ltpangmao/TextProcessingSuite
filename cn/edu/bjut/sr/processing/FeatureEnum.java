@@ -65,7 +65,7 @@ public class FeatureEnum {
 	/*********************
 	 *  SR features enumeration 
 	 **********************/
-	public static String CATEGORY = "category";
+	public static String CATEGORY = "class";//"category";
 	public static String SENTENCE = "sentence";
 
 	public static String[] SP = {
@@ -74,18 +74,29 @@ public class FeatureEnum {
 			"integrity", "immunity", "anonymity", "confidentiality", "privacy",
 			"availability", "non-repudiation", "accountability", "business continuity", "reliability",
 	};
+	// this set can have repated elements, as we will remove them when using them
 	public static String[] SM = {
 			// Security Mechanism
-			"auditing", "access control", "proof", "key", "lock", "pin", "detection",
-			"validation", "verification", "awareness", "education", "training",
+			"auditing", "access control", "key", "lock", "detection",
+			"validation", "verification", "security education",
 			"backup", "clear desk", "clear screen", "clock synchronization",
-			"cryptography", "disposal", "log", "monitoring", "segregation", "separation", 
+			"cryptography", "disposal", "logging", "monitoring", "segregation", "separation", //"pin", "awareness", "proof", 
 			"password", "screening", "protection",
-			"compliance", "restriction", "assurance", "permission",
+			"compliance", "restriction", "assurance", //"permission",
 			/*new*/
 			// from two-word phrases
-			"security manangement", "digital signiture", "control", "security	gateways", "firewall", 
+			"security manangement", "digital signiture", "control", "security gateways", "firewall", 
 			"encryption", "security mechanism","safeguard", "dmz", "demilitarized zone", "security check",
+			// from three-word phrases
+			"security policy", "security guideline", "security setting", "security strategy", 
+			"security measure",
+			// from four-word phrases
+			"security process", "security guideline", "security	setting", "security strategy", 
+			// tf-idf
+			"troubleshoot", "diagnosis","key recovery", "system recovery", "trust network", "certification",
+			"sandbox","antivirus","pki","ssl","puk", "checklist","ipsec", "virs scanning","awareness training",
+			"security training",
+			
 			
 			// detailed check based on SM titles
 			"adapted segmentation",
@@ -97,7 +108,6 @@ public class FeatureEnum {
 			"uninterruptible power supply", "ups",
 			"safeguard",
 			"safekeeping",
-			"shield", 
 			"anti-theft",
 			"surveillance",
 
@@ -108,12 +118,35 @@ public class FeatureEnum {
 			"fraud", "error", "bug", "vulnerability", "risk", "fault", "leakage", "misuse",
 			"virus",
 			/*new*/
-			"hacker","loophole","threat",
+			"hacker","loophole","threat","picklock","forgery","spyware","disclosure",
+
+			/*new*/
+			// from two-word phrases
+			 "unauthorized asscess", "unauthorized person","attacker","danger","error",//"loss",    
+			// from three-word phrases
+			"trojan horse", 
+			// from four-word phrases
+			"brute force",  
+			// tf-idf
+			"damage","defect","burglary","flaw","violation","intrusion","steal",
+			"tamper","destruction","malware","hazard", //"weakness",
+			"leak","attack","manipulation","fraud","abuse","hijacking","spoof","falsify","detriment","abend",
+			
+/////			
+			"incorrect use", "incorrect handling", "incorrect entry", "incorrect action", "incorrect configuration", "misjudgement",
+			"insecure connection", "insecure channel", "insecure policy",
+			"inadequate administration",
+			"improper",
+			"invalid", "divulge"
+			
+			
 	};
 	public static String[] EL = {
 			// Eliminate
 			"eliminate", "get rid of", "stop", "reduce", "avoid",
 			/*new*/
+			"annihilate","eradicate","wipe out", "extinguish","obviate","eradicate",
+			"decimate","carry off","rule out", "winnow out", "reject", 
 	};
 	public static String[] PR = {		
 			// Protect
@@ -122,22 +155,32 @@ public class FeatureEnum {
 	public static String[] AC = {
 			// Achieve
 			"achieve", "obtain", "satisfy", "fulfill",
+			/*new*/
+			"accomplish", "attain","reach",
 	};
 	public static String[] PV = {
 			// Provide
 			"provide", "have", "implement", "deploy", 
+			/*new*/
+			"render", "supply","cater","offer", "furnish",
 	};
 	public static String[] RE = {
 			// Restrict
 			"restrict", "limit",
+			/*new*/
+			"curtail", "curb","restrain","bound","confine",
 	};
 	public static String[] AS = {
 			// Assure
 			"assure", "ensure",
+			/*new*/
+			"guarantee", "insure",  
 	};
 	public static String[] PE = {
 			// Permit
 			"permit", "allow", "admit",
+			/*new*/
+			"let", 
 	};
 	public static String[] OB = {
 			// Obey
@@ -153,14 +196,14 @@ public class FeatureEnum {
 		List list = new ArrayList(Arrays.asList(SP).stream().distinct().collect(Collectors.toList()));
 	    list.addAll(Arrays.asList(SM).stream().distinct().collect(Collectors.toList()));
 	    list.addAll(Arrays.asList(TH).stream().distinct().collect(Collectors.toList()));
-	    list.addAll(Arrays.asList(EL));
-	    list.addAll(Arrays.asList(PR));
-	    list.addAll(Arrays.asList(AC));
-	    list.addAll(Arrays.asList(PV));
-	    list.addAll(Arrays.asList(RE));
-	    list.addAll(Arrays.asList(AS));
-	    list.addAll(Arrays.asList(PE));
-	    list.addAll(Arrays.asList(OB));
+//	    list.addAll(Arrays.asList(EL));
+//	    list.addAll(Arrays.asList(PR));
+//	    list.addAll(Arrays.asList(AC));
+//	    list.addAll(Arrays.asList(PV));
+//	    list.addAll(Arrays.asList(RE));
+//	    list.addAll(Arrays.asList(AS));
+//	    list.addAll(Arrays.asList(PE));
+//	    list.addAll(Arrays.asList(OB));
 	    
 	    KEYWORD = list.toArray();
 	}

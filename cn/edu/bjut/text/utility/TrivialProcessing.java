@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,12 +20,39 @@ public class TrivialProcessing {
 //		addQuote();
 //		prepareWeightedFile();
 		
-		String path = "/Users/tongli/OneDrive/temp/data/AppReviews.csv";
-		importCSVFile(path, "gbk", 10);
+//		String path = "/Users/tongli/OneDrive/temp/data/AppReviews.csv";
+//		importCSVFile(path, "gbk", 10);
+//		
+//		path = "/Users/tongli/OneDrive/temp/data/new_reviews.csv";
+//		importCSVFile(path, "utf8", 10);
 		
-		path = "/Users/tongli/OneDrive/temp/data/new_reviews.csv";
-		importCSVFile(path, "utf8", 10);
+		//String.class,int.class,int.class
+		
+		String unknown_class_name = "cn.edu.bjut.text.utility.Word";
+		String unknown_method_name = "wordPrint";
+		String unknown_method_content = "test";
+		String parameter_type_string = "java.lang.String";
+		
+		Class parameter_type = Class.forName(parameter_type_string);
+		Class unknown_class = Class.forName(unknown_class_name);
+		Object o= unknown_class.newInstance();
+		Method unknown_method=unknown_class.getMethod(unknown_method_name,parameter_type);
+		unknown_method.invoke(o,unknown_method_content);
+		
+		
 	}
+	// course example
+	@SuppressWarnings({"rawtypes","unchecked"})
+	static void weirdMethod(String unknown_class_name, 
+			String unknown_method_name, String parameter_type_name,
+			String unknown_para_content) throws Exception {
+		Class parameter_type = Class.forName(parameter_type_name);
+		Class unknown_class = Class.forName(unknown_class_name);
+		Object o = unknown_class.newInstance();
+		Method unknown_method = unknown_class.getMethod(unknown_method_name, parameter_type);
+		unknown_method.invoke(o, unknown_para_content);
+	}
+
 	
 	
 	public static void importCSVFile(String path, String encode, int num) {
