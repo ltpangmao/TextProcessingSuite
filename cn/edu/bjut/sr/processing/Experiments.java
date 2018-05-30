@@ -9,7 +9,17 @@ import weka.classifiers.evaluation.Evaluation;
 
 public class Experiments {
 
-	
+	final static String EPUSE = "0";
+	final static String CPN = "1";
+	final static String GPS = "2";
+	// >50, >10%
+	final static String NFR3 = "3";
+	final static String NFR4 = "4";
+	final static String NFR5 = "5";
+	final static String NFR6 = "6";
+	final static String NFR8 = "7";
+	final static String NFR10 = "8";
+	final static String NFR = "9";
 	
 	
 	
@@ -21,7 +31,9 @@ public class Experiments {
 		// all experiments
 //		String [] experiments = {"0","1","2","01","02","12","012","3"};
 //		String [] experiments = {"0","1","2","01","02","12","012"};
-		String [] experiments = {"3"};
+//		String [] experiments = {"3","4","5","6","7","8","9"};
+		String [] experiments = {NFR3,NFR4,NFR8,NFR};
+		
 		
 		LinkedList<EvaluationResult> eval_results = new LinkedList<EvaluationResult>();
 
@@ -223,7 +235,7 @@ public class Experiments {
 			individualExperiment(method);
 		}
 		
-//		crossDomainExperiment("3");
+//		crossDomainExperiment(NFR);
 		
 		
 		

@@ -83,4 +83,21 @@ public class IOUtil {
 		}
 		return results;
 	}
+	
+	
+	/**
+	 * Export specific content to specific files 
+	 */
+	public static void exportToFile(String content, String filePath, boolean append) {
+		
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(new FileWriter(filePath, append));
+			writer.println(content);
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

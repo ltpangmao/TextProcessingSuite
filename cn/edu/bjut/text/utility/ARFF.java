@@ -251,14 +251,67 @@ public class ARFF {
 	
 	public static void main(String Args[]) throws IOException {
 		
-		loadARFF("test files/three/ePurse.arff");
+//		loadARFF("test files/three/ePurse.arff");
+//		prepareSRAtrributes();
+//		saveARFF("test files/three/ePurse_r.arff");
 		
+//		processSpecificARFFToSeparateCSV();
+		processSpecificARFFToCSV();
 		
-		prepareSRAtrributes();
-		
-		
-		saveARFF("test files/three/ePurse_r.arff");
+	}
+
+	private static void processSpecificARFFToCSV() throws IOException {
+		loadARFF("original data/original/nfr.arff");
+		String data_csv = "";
+		int sec_num = 0;
+		for(int i=0; i<data.size();i++) {
+			if(data.get(i).stringValue(2).equals("SE")) {
+				data_csv += data.get(i).stringValue(1).replace(";", ",")+";"+"sec\n";
+				sec_num ++;
+			}
+			else {
+				data_csv += data.get(i).stringValue(1).replace(";", ",")+";"+"nonsec\n";
+			}
 		}
+		// output the last group
+		IOUtil.exportToFile(data_csv,"original data/original/nfr.csv",false);
+		System.out.print(data.size()+"  "+sec_num);
+	}
+
+	private static void processSpecificARFFToSeparateCSV() throws IOException {
+		loadARFF("original data/original/nfr.arff");
+		String data_csv = "";
+		int project_id = 1;
+		int counter = 0;
+		int sec_num = 0;
+		for(int i=0; i<data.size();i++) {
+			if(data.get(i).stringValue(0).equals(Integer.toString(project_id))) {
+				counter++;
+			}
+			else {
+				// if a project complete, output its records to files
+				IOUtil.exportToFile(data_csv,"original data/original/nfr_"+project_id+".csv",false);
+				System.out.print(project_id+"  "+counter+"  "+sec_num+"\n");
+				//reset everything
+				project_id++;
+				counter = 0;
+				data_csv = "";
+				sec_num = 0;
+				
+			}
+			if(data.get(i).stringValue(2).equals("SE")) {
+				
+				data_csv += data.get(i).stringValue(1).replace(";", ",")+";"+"sec\n";
+				sec_num ++;
+			}
+			else {
+				data_csv += data.get(i).stringValue(1).replace(";", ",")+";"+"nonsec\n";
+			}
+		}
+		// output the last group
+		IOUtil.exportToFile(data_csv,"original data/original/nfr_"+project_id+".csv",false);
+		System.out.print(project_id+"  "+counter+"  "+sec_num);
+	}
 
 }
 

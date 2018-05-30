@@ -91,7 +91,7 @@ public class FeatureEnum {
 			"security policy", "security guideline", "security setting", "security strategy", 
 			"security measure",
 			// from four-word phrases
-			"security process", "security guideline", "security	setting", "security strategy", 
+			"security process", 
 			// tf-idf
 			"troubleshoot", "diagnosis","key recovery", "system recovery", "trust network", "certification",
 			"sandbox","antivirus","pki","ssl","puk", "checklist","ipsec", "virs scanning","awareness training",
@@ -122,7 +122,8 @@ public class FeatureEnum {
 
 			/*new*/
 			// from two-word phrases
-			 "unauthorized asscess", "unauthorized person","attacker","danger","error",//"loss",    
+			 "unauthorized", //"unauthorized asscess", "unauthorized person",
+			 "attacker","danger","error",//"loss",    
 			// from three-word phrases
 			"trojan horse", 
 			// from four-word phrases
@@ -133,20 +134,24 @@ public class FeatureEnum {
 			"leak","attack","manipulation","fraud","abuse","hijacking","spoof","falsify","detriment","abend",
 			
 /////			
-			"incorrect use", "incorrect handling", "incorrect entry", "incorrect action", "incorrect configuration", "misjudgement",
-			"insecure connection", "insecure channel", "insecure policy",
-			"inadequate administration",
+			"incorrect",//"incorrect use", "incorrect handling", "incorrect entry", "incorrect action", "incorrect configuration", 
+			"misjudgement",
+			"insecure",//"insecure connection", "insecure channel", "insecure policy",
+			"inadequate",//"inadequate administration",
 			"improper",
-			"invalid", "divulge"
+			"maicious",
+			"invalid", 
+			"divulge"
 			
 			
 	};
 	public static String[] EL = {
 			// Eliminate
-			"eliminate", "get rid of", "stop", "reduce", "avoid",
+			"eliminate", "get rid of", "stop", "reduce", "avoid", 
 			/*new*/
 			"annihilate","eradicate","wipe out", "extinguish","obviate","eradicate",
-			"decimate","carry off","rule out", "winnow out", "reject", 
+			"decimate","carry off","rule out", "winnow out", "reject",
+			"free of",
 	};
 	public static String[] PR = {		
 			// Protect
@@ -169,6 +174,7 @@ public class FeatureEnum {
 			"restrict", "limit",
 			/*new*/
 			"curtail", "curb","restrain","bound","confine",
+			"can only",
 	};
 	public static String[] AS = {
 			// Assure
@@ -211,6 +217,7 @@ public class FeatureEnum {
 	
 	public static String[] RULE = {
 			"T", "A", "S", "C1", "C2", "C3", "C4", "C5",
+			
 			"C1A", "C2A", "C3A", "C4A", "C5A",
 			"C1T", "C2T", "C3T", "C4T", "C5T",
 			"C1S", "C2S", "C3S", "C4S", "C5S", 
@@ -233,6 +240,7 @@ public class FeatureEnum {
 		LINGUISTIC_RULES.put("C3", ".*"+FeatureEnum.ASSURE+".*");
 		LINGUISTIC_RULES.put("C4", ".*"+FeatureEnum.PERMIT+".*");
 		LINGUISTIC_RULES.put("C5", ".*"+FeatureEnum.OBEY+".*");
+		
 
 		LINGUISTIC_RULES.put("C1A", ".*"+FeatureEnum.PROVIDE+".*"+FeatureEnum.SECURITY_MECHANISM+".*"+FeatureEnum.PROTECT+".*");
 		LINGUISTIC_RULES.put("C2A", ".*"+FeatureEnum.RESTRICT+".*"+FeatureEnum.PROTECT+".*");
@@ -280,6 +288,8 @@ public class FeatureEnum {
 		LINGUISTIC_RULES.put("C3ATS", ".*"+FeatureEnum.ASSURE+".*"+FeatureEnum.PROTECT+".*"+FeatureEnum.THREAT+".*"+FeatureEnum.ACHIEVE+".*"+FeatureEnum.SECURITY_PROPERTY+".*");
 		LINGUISTIC_RULES.put("C4ATS", ".*"+FeatureEnum.PERMIT+".*"+FeatureEnum.PROTECT+".*"+FeatureEnum.THREAT+".*"+FeatureEnum.ACHIEVE+".*"+FeatureEnum.SECURITY_PROPERTY+".*");
 		LINGUISTIC_RULES.put("C5ATS", ".*"+FeatureEnum.OBEY+".*"+FeatureEnum.PROTECT+".*"+FeatureEnum.THREAT+".*"+FeatureEnum.ACHIEVE+".*"+FeatureEnum.SECURITY_PROPERTY+".*");
+		
+		
 	}
 	
 	// to be revised

@@ -27,7 +27,8 @@ public class TrivialProcessing {
 //		importCSVFile(path, "utf8", 10);
 		
 		//String.class,int.class,int.class
-		
+	
+		/*
 		String unknown_class_name = "cn.edu.bjut.text.utility.Word";
 		String unknown_method_name = "wordPrint";
 		String unknown_method_content = "test";
@@ -38,6 +39,7 @@ public class TrivialProcessing {
 		Object o= unknown_class.newInstance();
 		Method unknown_method=unknown_class.getMethod(unknown_method_name,parameter_type);
 		unknown_method.invoke(o,unknown_method_content);
+		*/
 		
 		
 	}

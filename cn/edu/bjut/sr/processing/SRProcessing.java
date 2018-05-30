@@ -29,11 +29,11 @@ public class SRProcessing {
 	private int rule_temp_count = 0;
 	private int keyword_temp_count = 0;
 	
-	private String[] data_files = {"original data//ePurse-selective.csv", "original data//CPN.csv", "original data//GPS.csv", "original data//nfr.csv" };
-	final String EPUSE = "0";
-	final String CPN = "1";
-	final String GPS = "2";
-	final String NFR = "3";
+	private String[] data_files = {"original data//ePurse-selective.csv", "original data//CPN.csv", "original data//GPS.csv", 
+			"original data//nfr_3.csv","original data//nfr_4.csv","original data//nfr_5.csv",
+			"original data//nfr_6.csv","original data//nfr_8.csv","original data//nfr_10.csv",
+			"original data//nfr.csv"};
+	
 	
 	
 	
