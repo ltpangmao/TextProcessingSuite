@@ -29,10 +29,12 @@ public class Experiments {
 	 */
 	public static void individualExperiment(String method) throws Exception{
 		// all experiments
-//		String [] experiments = {"0","1","2","01","02","12","012","3"};
+//		String [] experiments = {"0","1","2","01","02","12","012"};
 //		String [] experiments = {"0","1","2","01","02","12","012"};
 //		String [] experiments = {"3","4","5","6","7","8","9"};
-		String [] experiments = {NFR3,NFR4,NFR8,NFR};
+//		String [] experiments = {NFR3,NFR4,NFR5,NFR6,NFR8,NFR,NFR3+NFR5+NFR8+NFR4};
+//		String [] experiments = {NFR3+NFR5+NFR8+NFR4,NFR3+NFR5+NFR8,NFR3,NFR5,NFR8,NFR};
+		String [] experiments = {NFR};
 		
 		
 		LinkedList<EvaluationResult> eval_results = new LinkedList<EvaluationResult>();
@@ -116,7 +118,8 @@ public class Experiments {
 	 */
 	public static void crossDomainExperiment(String evaluated_set) throws Exception{
 		
-		String[] data_sets = {"0","1","2","01","02","12","012"};
+//		String[] data_sets = {"0","1","2","01","02","12","012"};
+		String[] data_sets = {"012"};
 //		String[] data_sets = {"0"};
 		
 		for(String data_set:data_sets) {
@@ -125,13 +128,13 @@ public class Experiments {
 			if(!data_set.contains(evaluated_set)) {
 				System.out.print(data_set +"->"+evaluated_set);
 				// load the training dataset to wa1
-				srp1.processDataAndGenerateArff(data_set, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa1);
+				srp1.processDataAndGenerateArff(data_set, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_SINGLE, FeatureEnum.TRAIN_DEP_NO, wa1);
 				
 				// load the test dataset to wa2
 				SRProcessing srp2 = new SRProcessing();
 				WekaAnalysisDataset wa2 = new WekaAnalysisDataset();
 				// load another dataset
-				srp2.processDataAndGenerateArff(evaluated_set, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
+				srp2.processDataAndGenerateArff(evaluated_set, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_SINGLE, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
 				
 		//		wa1.classifyUseTrainTestData(wa2, "J48", null);
 				Classifier temp = wa1.trainClassifier("J48");
@@ -166,7 +169,7 @@ public class Experiments {
 				srp2.processDataAndGenerateArff(evaluated_set, true, false, FeatureEnum.TRAIN_KEY_MULTI, FeatureEnum.TRAIN_RULE_MULTI, FeatureEnum.TRAIN_DEP_NO, wa2); // no need to keep the file path
 				
 		//		wa1.classifyUseTrainTestData(wa2, "J48", null);
-				Classifier temp = wa1.trainClassifier("LMT");
+				Classifier temp = wa1.trainClassifier("J48");
 				wa1.evaluateWithTestData(temp, wa2, null);
 
 			}
@@ -229,13 +232,15 @@ public class Experiments {
 
 	public static void main(String[] args) throws Exception {
 //		String methods[] = {"NB","BN","LMT","J48","SMO","Logistic","DT","PART"};
-		String methods[] = {"Logistic"};
+		String methods[] = {"J48"};
 		for(String method:methods) {
 			System.out.println("\n\n\n**********"+method);
 			individualExperiment(method);
 		}
 		
-//		crossDomainExperiment(NFR);
+//		crossDomainExperiment(NFR5+NFR3+NFR8+NFR4);
+//		crossDomainExperiment(NFR5+NFR3+NFR8);
+		crossDomainExperiment(NFR);
 		
 		
 		
